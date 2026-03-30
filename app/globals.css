@@ -1,0 +1,198 @@
+:root {
+  --primary: #2563EB;
+  --secondary: #0EA5E9;
+  --bg-gradient-start: #0f172a;
+  --bg-gradient-end: #1e1b4b;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.08);
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-dark: #1e293b;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Button variants */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 1rem;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+.btn-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: white;
+}
+
+.btn-glass:hover:not(:disabled) {
+  background: var(--glass-hover);
+}
+
+/* Typography Utilities */
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(135deg, var(--secondary), #a78bfa);
+}
+
+/* Forms */
+textarea, input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  color: white;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+textarea:focus, input:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+}
+
+textarea::placeholder {
+  color: #64748b;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Real CV Preview Styling */
+.cv-document {
+  background: white;
+  color: var(--text-dark);
+  padding: 2.5rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  font-family: 'Inter', sans-serif;
+  margin: 0 auto;
+  max-width: 210mm; /* A4 width */
+}
+
+.cv-document h1 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+  color: #0f172a;
+}
+
+.cv-document h2 {
+  font-size: 1.25rem;
+  color: #334155;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.cv-document h3 {
+  font-size: 1.1rem;
+  color: #0f172a;
+  margin-top: 1rem;
+}
+
+.cv-document p, .cv-document ul {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.cv-document ul {
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.cv-document li {
+  margin-bottom: 0.25rem;
+}

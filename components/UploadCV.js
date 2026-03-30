@@ -1,0 +1,118 @@
+'use client';
+import { useState, useRef } from 'react';
+import { UploadCloud, FileText, CheckCircle } from 'lucide-react';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// We must set the worker source. Pointing to unpkg or cdnjs matches the version
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+export default function UploadCV({ onTextExtracted }) {
+  const [isHovering, setIsHovering] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [isExtracting, setIsExtracting] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFile = async (file) => {
+    if (!file || file.type !== 'application/pdf') {
+      alert('Please upload a valid PDF file.');
+      return;
+    }
+    
+    setFileName(file.name);
+    setIsExtracting(true);
+
+    try {
+      const fileReader = new FileReader();
+
+      fileReader.onload = async function() {
+        const typedarray = new Uint8Array(this.result);
+        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+        let fullText = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n\n';
+        }
+
+        onTextExtracted(fullText);
+        setIsExtracting(false);
+      };
+
+      fileReader.readAsArrayBuffer(file);
+    } catch (error) {
+      console.error('Error extracting PDF text:', error);
+      alert('Failed to extract text from PDF.');
+      setIsExtracting(false);
+      setFileName('');
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsHovering(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsHovering(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsHovering(false);
+    const files = e.dataTransfer.files;
+    if (files.length > 0) handleFile(files[0]);
+  };
+
+  return (
+    <div 
+      className="glass-panel"
+      style={{
+        padding: '2rem',
+        border: `2px dashed ${isHovering ? 'var(--secondary)' : 'var(--glass-border)'}`,
+        textAlign: 'center',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+        background: isHovering ? 'rgba(14, 165, 233, 0.1)' : 'var(--glass-bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '200px'
+      }}
+      onClick={() => fileInputRef.current?.click()}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={(e) => handleFile(e.target.files[0])} 
+        accept="application/pdf" 
+        style={{ display: 'none' }} 
+      />
+      
+      {isExtracting ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="spinner" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent', width: '40px', height: '40px', marginBottom: '1rem' }}></div>
+          <p style={{ fontWeight: 500, color: 'white' }}>Extracting text...</p>
+        </div>
+      ) : fileName ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <CheckCircle size={48} color="#10b981" />
+          <p style={{ fontWeight: 600, color: 'white', marginTop: '1rem' }}>{fileName}</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Click or drag to replace</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+          <UploadCloud size={48} color="var(--secondary)" style={{ marginBottom: '1rem' }} />
+          <p style={{ fontWeight: 600, color: 'white', fontSize: '1.1rem' }}>Upload your current CV</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>PDF format only</p>
+        </div>
+      )}
+    </div>
+  );
+}
