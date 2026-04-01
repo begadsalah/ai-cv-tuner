@@ -1,14 +1,22 @@
 'use client';
 
-export default function CoverLetterTab({ content }) {
+import { forwardRef } from 'react';
+
+const CoverLetterTab = forwardRef(({ content }, ref) => {
   if (!content) return null;
   
   return (
-    <div className="glass-panel" style={{ padding: '2rem', background: 'rgba(255,255,255,0.05)', color: 'white', lineHeight: 1.6, whiteSpace: 'pre-wrap', maxHeight: '600px', overflowY: 'auto' }}>
-      <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: 'var(--secondary)' }}>Generated Cover Letter</h3>
-      <div style={{ fontSize: '0.95rem' }}>
+    <div style={{ padding: '1rem', background: '#f8fafc', borderRadius: '8px', overflow: 'auto', maxHeight: '600px' }}>
+      <div 
+        ref={ref}
+        style={{ background: 'white', color: 'black', padding: '40px', fontFamily: 'Arial, sans-serif', fontSize: '11pt', lineHeight: 1.6, whiteSpace: 'pre-wrap', minHeight: '800px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+      >
         {content}
       </div>
     </div>
   );
-}
+});
+
+CoverLetterTab.displayName = 'CoverLetterTab';
+
+export default CoverLetterTab;

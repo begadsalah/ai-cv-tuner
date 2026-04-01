@@ -4,12 +4,17 @@ import { Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-export default function DownloadPDFButton({ targetRef, disabled }) {
+export default function DownloadPDFButton({ targetRef, disabled, defaultFileName = 'Optimized_CV' }) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleDownload = async () => {
     if (!targetRef.current || disabled) return;
     
+    const fileNameInput = window.prompt('Enter file name for download:', defaultFileName);
+    if (!fileNameInput) return;
+
+    const finalFileName = fileNameInput.endsWith('.pdf') ? fileNameInput : `${fileNameInput}.pdf`;
+
     setIsExporting(true);
     try {
       // Small delay to ensure rendering is complete
@@ -29,7 +34,7 @@ export default function DownloadPDFButton({ targetRef, disabled }) {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('Optimized_CV.pdf');
+      pdf.save(finalFileName);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Check console for details.');

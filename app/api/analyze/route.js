@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { cvText, jobDescription } = body;
+    const { cvText, jobDescription, additionalContext } = body;
 
     if (!cvText || !jobDescription) {
       return NextResponse.json({ error: 'Missing cvText or jobDescription' }, { status: 400 });
@@ -27,19 +27,23 @@ Here is the Job Description:
 ${jobDescription}
 ---
 
+${additionalContext ? `The user has provided this additional context to incorporate into the new optimized CV version: "${additionalContext}"\nPlease integrate this context seamlessly into the optimized CV.` : ''}
+
 Task:
 1. Calculate the ATS match score (0-100) for the current CV against the Job Description.
 2. Rewrite and optimize the CV to perfectly match the job description. Do not fabricate experience, but heavily tailor the skills and summaries. 
    Structure the optimized CV completely with clean HTML tags (<h1>, <h2>, <h3>, <ul>, <li>, <p>) suitable for rendering directly inside a React <div> block. DO NOT use <html>, <head>, or <body> tags. Ensure the HTML represents a clean, professional CV document grouping by Name/Contact, Summary, Skills, Experience, and Education.
 3. Calculate the new projected ATS match score (0-100) after optimization.
-4. List 3 to 5 specific improvements made.
+4. List 3 to 5 specific improvements made. Crucially, explicitly explain HOW each improvement maps directly to what this specific ATS is looking for based on the Job Description (e.g., "Added keyword X because the ATS scans for Y").
 5. Write a professional, tailored Cover Letter based on the optimized CV and job description (return as plain text with newlines or basic formatting).
+6. Identify if any critical qualifications, skills, or experiences from the Job Description are completely missing from the CV. Return an array of questions asking the user to provide this missing information (e.g., "The JD requires 5 years of Python, but your CV doesn't mention it. Do you have this experience?"). If nothing major is missing, return an empty array.
 
 Return a JSON object matching this schema. Your output must ONLY be the JSON payload so that it can be parsed immediately.
 {
   "original_score": Number,
   "optimized_score": Number,
   "improvements": [String, String, ...],
+  "missing_info": [String, ...],
   "optimized_cv": "HTML String with CV content. Be sure to use <h1> for the name, <h2> for section headers.",
   "cover_letter": "String of the cover letter with newlines"
 }

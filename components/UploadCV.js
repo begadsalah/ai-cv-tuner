@@ -4,7 +4,7 @@ import { UploadCloud, FileText, CheckCircle } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // We must set the worker source. Pointing to unpkg or cdnjs matches the version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 export default function UploadCV({ onTextExtracted }) {
   const [isHovering, setIsHovering] = useState(false);

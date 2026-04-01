@@ -12,8 +12,9 @@ export default function Dashboard() {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [additionalContext, setAdditionalContext] = useState('');
 
-  const handleOptimize = async () => {
+  const handleOptimize = async (contextOverride = '') => {
     if (!cvText) {
       setError('Please upload and extract a CV first.');
       return;
@@ -30,7 +31,7 @@ export default function Dashboard() {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cvText, jobDescription })
+        body: JSON.stringify({ cvText, jobDescription, additionalContext: typeof contextOverride === 'string' && contextOverride ? contextOverride : additionalContext })
       });
 
       if (!response.ok) {
@@ -76,7 +77,7 @@ export default function Dashboard() {
           <button 
             className="btn btn-primary" 
             style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}
-            onClick={handleOptimize}
+            onClick={() => handleOptimize()}
             disabled={isLoading || !cvText || !jobDescription}
           >
             {isLoading ? (
@@ -90,7 +91,14 @@ export default function Dashboard() {
         
         {/* Right Side: Output */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <ResultsPanel results={results} isLoading={isLoading} />
+          <ResultsPanel 
+            results={results} 
+            isLoading={isLoading} 
+            onProvideMoreInfo={(info) => {
+              setAdditionalContext(info);
+              handleOptimize(info);
+            }} 
+          />
         </div>
       </div>
       

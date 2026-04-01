@@ -1,13 +1,16 @@
 'use client';
 import { useState, useRef } from 'react';
+import { AlertCircle } from 'lucide-react';
 import ScoreComparison from './ScoreComparison';
 import CVPreview from './CVPreview';
 import CoverLetterTab from './CoverLetterTab';
 import DownloadPDFButton from './DownloadPDFButton';
 
-export default function ResultsPanel({ results, isLoading }) {
+export default function ResultsPanel({ results, isLoading, onProvideMoreInfo }) {
   const [activeTab, setActiveTab] = useState('cv'); // 'cv' or 'coverletter'
   const cvRef = useRef(null);
+  const coverLetterRef = useRef(null);
+  const [additionalInfo, setAdditionalInfo] = useState('');
 
   if (isLoading) {
     return (
@@ -59,16 +62,73 @@ export default function ResultsPanel({ results, isLoading }) {
           </div>
 
           {activeTab === 'cv' && (
-            <DownloadPDFButton targetRef={cvRef} disabled={false} />
+            <DownloadPDFButton targetRef={cvRef} disabled={false} defaultFileName="Optimized_CV" />
+          )}
+
+          {activeTab === 'coverletter' && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-glass"
+                onClick={() => {
+                  const filename = window.prompt("Enter file name for download:", "Cover_Letter");
+                  if (!filename) return;
+                  const finalName = filename.endsWith('.txt') ? filename : `${filename}.txt`;
+                  const element = document.createElement("a");
+                  const file = new Blob([results.cover_letter], {type: 'text/plain'});
+                  element.href = URL.createObjectURL(file);
+                  element.download = finalName;
+                  document.body.appendChild(element);
+                  element.click();
+                  document.body.removeChild(element);
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                Download Text
+              </button>
+              <DownloadPDFButton targetRef={coverLetterRef} disabled={false} defaultFileName="Cover_Letter" />
+            </div>
           )}
         </div>
 
         {activeTab === 'cv' ? (
           <CVPreview ref={cvRef} content={results.optimized_cv} />
         ) : (
-          <CoverLetterTab content={results.cover_letter} />
+          <CoverLetterTab ref={coverLetterRef} content={results.cover_letter} />
         )}
       </div>
+
+      {results.missing_info && results.missing_info.length > 0 && (
+         <div className="glass-panel" style={{ padding: '1.5rem', border: '1px solid #f59e0b' }}>
+           <h3 style={{ color: '#f59e0b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+             <AlertCircle size={20} /> Missing ATS Context
+           </h3>
+           <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.95rem' }}>
+             The Job Description specifically asks for things that seem to be missing from your CV. 
+             Provide answers below and generate Version 2 for a stronger match!
+           </p>
+           <ul style={{ color: 'white', paddingLeft: '1.5rem', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.95rem' }}>
+             {results.missing_info.map((q, idx) => (
+               <li key={idx}><strong>{q}</strong></li>
+             ))}
+           </ul>
+           <textarea 
+             value={additionalInfo}
+             onChange={(e) => setAdditionalInfo(e.target.value)}
+             placeholder="Type your answers here (e.g. 'I used Python for 4 years at Company X...')"
+             style={{ width: '100%', minHeight: '120px', padding: '1rem', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', marginBottom: '1rem' }}
+           />
+           <button 
+             className="btn btn-primary" 
+             onClick={() => {
+                onProvideMoreInfo(additionalInfo);
+                setAdditionalInfo(''); // clear
+             }}
+             disabled={!additionalInfo.trim()}
+           >
+             Provide Info & Generate V2
+           </button>
+         </div>
+      )}
     </div>
   );
 }
