@@ -5,6 +5,7 @@ import ScoreComparison from './ScoreComparison';
 import CVPreview from './CVPreview';
 import CoverLetterTab from './CoverLetterTab';
 import DownloadPDFButton from './DownloadPDFButton';
+import DownloadCVButton from './DownloadCVButton';
 
 export default function ResultsPanel({ results, isLoading, onProvideMoreInfo }) {
   const [activeTab, setActiveTab] = useState('cv'); // 'cv' or 'coverletter'
@@ -62,7 +63,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo }) 
           </div>
 
           {activeTab === 'cv' && (
-            <DownloadPDFButton targetRef={cvRef} disabled={false} defaultFileName="Optimized_CV" />
+            <DownloadCVButton htmlContent={results.optimized_cv} disabled={false} defaultFileName="Optimized_CV" />
           )}
 
           {activeTab === 'coverletter' && (
