@@ -36,6 +36,19 @@ export default function UploadCV({ onTextExtracted }) {
           fullText += pageText + '\n\n';
         }
 
+        // Guard: if the extracted text is too short, the PDF is likely
+        // image-based or uses an unsupported font encoding.
+        if (fullText.trim().length < 50) {
+          setFileName('');
+          setIsExtracting(false);
+          alert(
+            'Could not extract readable text from this PDF.\n\n' +
+            'This usually happens when the PDF is image-based (a scanned photo).\n\n' +
+            'Please upload your original CV PDF, not a downloaded/scanned version.'
+          );
+          return;
+        }
+
         onTextExtracted(fullText);
         setIsExtracting(false);
       };

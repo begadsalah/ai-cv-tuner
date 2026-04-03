@@ -98,6 +98,14 @@ export default function Dashboard() {
               setAdditionalContext(info);
               handleOptimize(info);
             }} 
+            onSetAsBase={(text) => {
+               // Extract text from HTML to set as new base
+               const tempDiv = document.createElement('div');
+               tempDiv.innerHTML = text;
+               const plainText = tempDiv.innerText || tempDiv.textContent || '';
+               setCvText(plainText);
+               setResults(null); // Reset results to show the input view again
+            }}
           />
         </div>
       </div>

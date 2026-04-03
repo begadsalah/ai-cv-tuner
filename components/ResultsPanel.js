@@ -7,7 +7,7 @@ import CoverLetterTab from './CoverLetterTab';
 import DownloadPDFButton from './DownloadPDFButton';
 import DownloadCVButton from './DownloadCVButton';
 
-export default function ResultsPanel({ results, isLoading, onProvideMoreInfo }) {
+export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, onSetAsBase }) {
   const [activeTab, setActiveTab] = useState('cv'); // 'cv' or 'coverletter'
   const cvRef = useRef(null);
   const coverLetterRef = useRef(null);
@@ -63,7 +63,15 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo }) 
           </div>
 
           {activeTab === 'cv' && (
-            <DownloadCVButton htmlContent={results.optimized_cv} disabled={false} defaultFileName="Optimized_CV" />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                className="btn btn-glass"
+                onClick={() => onSetAsBase(results.optimized_cv)}
+              >
+                Use as Current CV
+              </button>
+              <DownloadCVButton htmlContent={results.optimized_cv} disabled={false} defaultFileName="Optimized_CV" />
+            </div>
           )}
 
           {activeTab === 'coverletter' && (
