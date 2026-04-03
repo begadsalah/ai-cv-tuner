@@ -1,8 +1,6 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
-// Standard fonts work best, but we can style them.
-// Arial/Helvetica equivalents like 'Helvetica' are built-in.
 const styles = StyleSheet.create({
   page: {
     paddingTop: 35,
@@ -19,9 +17,6 @@ const styles = StyleSheet.create({
     right: 0,
     textAlign: 'center',
     color: '#999999',
-  },
-  section: {
-    marginBottom: 10,
   },
   h1: {
     fontSize: 24,
@@ -78,55 +73,80 @@ const BulletPoint = ({ children }) => (
 );
 
 const OptimizedCVDocument = ({ htmlContent }) => {
-  // Simple parser to extract data from HTML-like markers.
-  // Since Gemini returns structured markers like <h1> and <li>,
-  // we can map them to @react-pdf components.
-  
-  const parseHTML = (html) => {
+  // Environment-safe parser using Regex for predictable AI output.
+  // Handles <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>.
+  const parseHTMLContent = (html) => {
     if (!html) return [];
-    
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const nodes = Array.from(doc.body.childNodes);
-    
-    return nodes.map((node, index) => {
-      const tag = node.nodeName.toLowerCase();
-      const content = node.textContent?.trim();
-      
-      if (!content && tag !== 'ul' && tag !== 'ol') return null;
-      
+
+    // Helper to decode basic entities
+    const decodeEntities = (str) => 
+      str.replace(/&amp;/g, '&')
+         .replace(/&lt;/g, '<')
+         .replace(/&gt;/g, '>')
+         .replace(/&quot;/g, '"')
+         .replace(/&#39;/g, "'")
+         .replace(/&nbsp;/g, ' ');
+
+    const components = [];
+    // Matches blocks: <h1>...</h1>, <h2>...</h2>, <h3>...</h3>, <p>...</p>, <ul>...</ul>, <ol>...</ol>
+    const blockRegex = /<(h1|h2|h3|p|ul|ol)[^>]*>(.*?)<\/\1>/gis;
+    let match;
+
+    while ((match = blockRegex.exec(html)) !== null) {
+      const tag = match[1].toLowerCase();
+      const rawContent = match[2];
+      const content = decodeEntities(rawContent.replace(/<[^>]+>/g, '').trim());
+
       switch (tag) {
         case 'h1':
-          return <Text key={index} style={styles.h1}>{content}</Text>;
+          components.push(<Text key={match.index} style={styles.h1}>{content}</Text>);
+          break;
         case 'h2':
-          return <Text key={index} style={styles.h2}>{content}</Text>;
+          components.push(<Text key={match.index} style={styles.h2}>{content}</Text>);
+          break;
         case 'h3':
-          return <Text key={index} style={styles.h3}>{content}</Text>;
+          components.push(<Text key={match.index} style={styles.h3}>{content}</Text>);
+          break;
         case 'p':
-          return <Text key={index} style={styles.p}>{content}</Text>;
+          if (content) components.push(<Text key={match.index} style={styles.p}>{content}</Text>);
+          break;
         case 'ul':
         case 'ol':
-          const items = Array.from(node.querySelectorAll('li'));
-          return (
-            <View key={index} style={{ marginBottom: 6 }}>
-              {items.map((li, liIndex) => (
-                <BulletPoint key={liIndex}>{li.textContent?.trim()}</BulletPoint>
-              ))}
-            </View>
-          );
+          // Sub-parse <li> tags
+          const liRegex = /<li[^>]*>(.*?)<\/li>/gis;
+          let liMatch;
+          const listItems = [];
+          while ((liMatch = liRegex.exec(rawContent)) !== null) {
+            const liContent = decodeEntities(liMatch[1].replace(/<[^>]+>/g, '').trim());
+            if (liContent) listItems.push(liContent);
+          }
+          if (listItems.length > 0) {
+            components.push(
+              <View key={match.index} style={{ marginBottom: 6 }}>
+                {listItems.map((item, idx) => (
+                  <BulletPoint key={`${match.index}-${idx}`}>{item}</BulletPoint>
+                ))}
+              </View>
+            );
+          }
+          break;
         default:
-          return <Text key={index} style={styles.p}>{content}</Text>;
+          break;
       }
-    }).filter(Boolean);
+    }
+
+    return components;
   };
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View>{parseHTML(htmlContent)}</View>
-        <Text style={styles.footer} render={({ pageNumber, totalPages }) => (
-          `Page ${pageNumber} of ${totalPages}`
-        )} fixed />
+        <View>{parseHTMLContent(htmlContent)}</View>
+        <Text
+          style={styles.footer}
+          render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
+          fixed
+        />
       </Page>
     </Document>
   );
