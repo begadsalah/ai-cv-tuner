@@ -1,85 +1,93 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
-const styles = StyleSheet.create({
-  page: {
-    paddingTop: 35,
-    paddingBottom: 65,
-    paddingHorizontal: 35,
-    backgroundColor: '#ffffff',
-    fontFamily: 'Helvetica',
-  },
-  footer: {
-    position: 'absolute',
-    fontSize: 9,
-    bottom: 30,
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    color: '#999999',
-  },
-  h1: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 6,
-    color: '#1a1a2e',
-  },
-  h2: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#0e4fad',
-    textTransform: 'uppercase',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#0e4fad',
-    paddingBottom: 4,
-    marginTop: 14,
-    marginBottom: 8,
-  },
-  h3: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 4,
-    color: '#333333',
-  },
-  p: {
-    fontSize: 10.5,
-    color: '#333333',
-    marginBottom: 5,
-    lineHeight: 1.5,
-  },
-  listItem: {
-    flexDirection: 'row',
-    marginBottom: 4,
-    paddingLeft: 12,
-  },
-  bulletPoint: {
-    width: 10,
-    fontSize: 10.5,
-  },
-  listText: {
-    flex: 1,
-    fontSize: 10.5,
-    color: '#333333',
-    lineHeight: 1.5,
-  },
-});
+const OptimizedCVDocument = ({ htmlContent, settings = {} }) => {
+  const {
+    fontSize = 10.5,
+    marginTop = 35,
+    marginBottom = 65,
+    marginLeft = 35,
+    marginRight = 35,
+  } = settings;
 
-const BulletPoint = ({ children }) => (
-  <View style={styles.listItem}>
-    <Text style={styles.bulletPoint}>•</Text>
-    <Text style={styles.listText}>{children}</Text>
-  </View>
-);
+  const styles = StyleSheet.create({
+    page: {
+      paddingTop: marginTop,
+      paddingBottom: marginBottom,
+      paddingLeft: marginLeft,
+      paddingRight: marginRight,
+      backgroundColor: '#ffffff',
+      fontFamily: 'Helvetica',
+    },
+    footer: {
+      position: 'absolute',
+      fontSize: fontSize * 0.85,
+      bottom: marginBottom * 0.5,
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      color: '#999999',
+    },
+    h1: {
+      fontSize: fontSize * 2.2,
+      fontWeight: 'bold',
+      marginBottom: fontSize * 0.5,
+      color: '#1a1a2e',
+    },
+    h2: {
+      fontSize: fontSize * 1.3,
+      fontWeight: 'bold',
+      color: '#0e4fad',
+      textTransform: 'uppercase',
+      borderBottomWidth: 1.5,
+      borderBottomColor: '#0e4fad',
+      paddingBottom: 4,
+      marginTop: fontSize * 1.3,
+      marginBottom: fontSize * 0.8,
+    },
+    h3: {
+      fontSize: fontSize * 1.1,
+      fontWeight: 'bold',
+      marginTop: fontSize * 0.8,
+      marginBottom: fontSize * 0.4,
+      color: '#333333',
+    },
+    p: {
+      fontSize: fontSize,
+      color: '#333333',
+      marginBottom: fontSize * 0.4,
+      lineHeight: 1.5,
+    },
+    listItem: {
+      flexDirection: 'row',
+      marginBottom: fontSize * 0.4,
+      paddingLeft: 12,
+    },
+    bulletPoint: {
+      width: 10,
+      fontSize: fontSize,
+    },
+    listText: {
+      flex: 1,
+      fontSize: fontSize,
+      color: '#333333',
+      lineHeight: 1.5,
+    },
+  });
 
-const OptimizedCVDocument = ({ htmlContent }) => {
+  const BulletPoint = ({ children }) => (
+    <View style={styles.listItem}>
+      <Text style={styles.bulletPoint}>•</Text>
+      <Text style={styles.listText}>{children}</Text>
+    </View>
+  );
+
   // Environment-safe parser using Regex for predictable AI output.
   // Handles <h1>, <h2>, <h3>, <p>, <ul>, <ol>, <li>.
   const parseHTMLContent = (html) => {
     if (!html) return [];
 
-    // Helper to decode basic entities
-    const decodeEntities = (str) => 
+    const decodeEntities = (str) =>
       str.replace(/&amp;/g, '&')
          .replace(/&lt;/g, '<')
          .replace(/&gt;/g, '>')
@@ -88,7 +96,6 @@ const OptimizedCVDocument = ({ htmlContent }) => {
          .replace(/&nbsp;/g, ' ');
 
     const components = [];
-    // Matches blocks: <h1>...</h1>, <h2>...</h2>, <h3>...</h3>, <p>...</p>, <ul>...</ul>, <ol>...</ol>
     const blockRegex = /<(h1|h2|h3|p|ul|ol)[^>]*>(.*?)<\/\1>/gis;
     let match;
 
@@ -112,7 +119,6 @@ const OptimizedCVDocument = ({ htmlContent }) => {
           break;
         case 'ul':
         case 'ol':
-          // Sub-parse <li> tags
           const liRegex = /<li[^>]*>(.*?)<\/li>/gis;
           let liMatch;
           const listItems = [];

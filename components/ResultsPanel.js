@@ -7,9 +7,11 @@ import CoverLetterTab from './CoverLetterTab';
 import DownloadPDFAction from './DownloadPDFAction';
 import OptimizedCVDocument from './OptimizedCVDocument';
 import CoverLetterDocument from './CoverLetterDocument';
+import PDFEditor from './PDFEditor';
 
 export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, onSetAsBase }) {
   const [activeTab, setActiveTab] = useState('cv'); // 'cv' or 'coverletter'
+  const [showEditor, setShowEditor] = useState(false);
   const [additionalInfo, setAdditionalInfo] = useState('');
 
   if (isLoading) {
@@ -49,13 +51,19 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button 
               className={`btn ${activeTab === 'cv' ? 'btn-primary' : 'btn-glass'}`}
-              onClick={() => setActiveTab('cv')}
+              onClick={() => {
+                setActiveTab('cv');
+                setShowEditor(false);
+              }}
             >
               Optimized CV
             </button>
             <button 
               className={`btn ${activeTab === 'coverletter' ? 'btn-primary' : 'btn-glass'}`}
-              onClick={() => setActiveTab('coverletter')}
+              onClick={() => {
+                setActiveTab('coverletter');
+                setShowEditor(false);
+              }}
             >
               Cover Letter
             </button>
@@ -68,6 +76,13 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
                 onClick={() => onSetAsBase(results.optimized_cv)}
               >
                 Use as Current CV
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setShowEditor(true)}
+                style={{ background: 'var(--secondary)', color: 'white' }}
+              >
+                Customize layout
               </button>
               <DownloadPDFAction 
                 document={<OptimizedCVDocument htmlContent={results.optimized_cv} />} 
@@ -106,10 +121,18 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           )}
         </div>
 
-        {activeTab === 'cv' ? (
-          <CVPreview content={results.optimized_cv} />
+        {showEditor ? (
+           <PDFEditor 
+             htmlContent={results.optimized_cv} 
+             onBack={() => setShowEditor(false)} 
+             defaultFileName={`Optimized_CV_${new Date().toLocaleDateString()}`}
+           />
         ) : (
-          <CoverLetterTab content={results.cover_letter} />
+          activeTab === 'cv' ? (
+            <CVPreview content={results.optimized_cv} />
+          ) : (
+            <CoverLetterTab content={results.cover_letter} />
+          )
         )}
       </div>
 
