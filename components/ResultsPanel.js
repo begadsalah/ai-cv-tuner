@@ -1,16 +1,15 @@
 'use client';
-import { useState, useRef } from 'react';
-import { AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, Download, FileText } from 'lucide-react';
 import ScoreComparison from './ScoreComparison';
 import CVPreview from './CVPreview';
 import CoverLetterTab from './CoverLetterTab';
-import DownloadPDFButton from './DownloadPDFButton';
-import DownloadCVButton from './DownloadCVButton';
+import DownloadPDFAction from './DownloadPDFAction';
+import OptimizedCVDocument from './OptimizedCVDocument';
+import CoverLetterDocument from './CoverLetterDocument';
 
 export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, onSetAsBase }) {
   const [activeTab, setActiveTab] = useState('cv'); // 'cv' or 'coverletter'
-  const cvRef = useRef(null);
-  const coverLetterRef = useRef(null);
   const [additionalInfo, setAdditionalInfo] = useState('');
 
   if (isLoading) {
@@ -70,7 +69,11 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
               >
                 Use as Current CV
               </button>
-              <DownloadCVButton htmlContent={results.optimized_cv} disabled={false} defaultFileName="Optimized_CV" />
+              <DownloadPDFAction 
+                document={<OptimizedCVDocument htmlContent={results.optimized_cv} />} 
+                disabled={false} 
+                defaultFileName="Optimized_CV" 
+              />
             </div>
           )}
 
@@ -94,15 +97,19 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
               >
                 Download Text
               </button>
-              <DownloadPDFButton targetRef={coverLetterRef} disabled={false} defaultFileName="Cover_Letter" />
+              <DownloadPDFAction 
+                document={<CoverLetterDocument content={results.cover_letter} />} 
+                disabled={false} 
+                defaultFileName="Cover_Letter" 
+              />
             </div>
           )}
         </div>
 
         {activeTab === 'cv' ? (
-          <CVPreview ref={cvRef} content={results.optimized_cv} />
+          <CVPreview content={results.optimized_cv} />
         ) : (
-          <CoverLetterTab ref={coverLetterRef} content={results.cover_letter} />
+          <CoverLetterTab content={results.cover_letter} />
         )}
       </div>
 
