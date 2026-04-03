@@ -1,145 +1,106 @@
 'use client';
 import { useState } from 'react';
 import { Download } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-
-// Converts the AI-generated HTML CV into structured text lines for jsPDF
-function parseHtmlToLines(htmlString) {
-  if (typeof window === 'undefined') return [];
-
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(htmlString, 'text/html');
-  const lines = [];
-
-  const processNode = (node) => {
-    const tag = node.nodeName.toLowerCase();
-    const text = node.textContent?.trim() || '';
-    if (!text) return;
-
-    switch (tag) {
-      case 'h1':
-        lines.push({ text, type: 'h1' });
-        break;
-      case 'h2':
-        lines.push({ text, type: 'h2' });
-        break;
-      case 'h3':
-        lines.push({ text, type: 'h3' });
-        break;
-      case 'p':
-        lines.push({ text, type: 'p' });
-        break;
-      case 'li':
-        lines.push({ text: `• ${text}`, type: 'li' });
-        break;
-      case 'ul':
-      case 'ol':
-        node.querySelectorAll('li').forEach((li) => {
-          const liText = li.textContent?.trim() || '';
-          if (liText) lines.push({ text: `• ${liText}`, type: 'li' });
-        });
-        break;
-      case '#text':
-        // skip bare text nodes (whitespace)
-        break;
-      default:
-        // For divs, sections, etc — recurse into children
-        node.childNodes.forEach((child) => processNode(child));
-    }
-  };
-
-  doc.body.childNodes.forEach((node) => processNode(node));
-  return lines;
-}
 
 export default function DownloadCVButton({ htmlContent, disabled, defaultFileName = 'Optimized_CV' }) {
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!htmlContent || disabled) return;
 
-    const fileNameInput = window.prompt('Enter file name for download:', defaultFileName);
-    if (!fileNameInput) return;
-    const finalFileName = fileNameInput.endsWith('.pdf') ? fileNameInput : `${fileNameInput}.pdf`;
-
     setIsExporting(true);
-    try {
-      const lines = parseHtmlToLines(htmlContent);
 
-      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const marginLeft = 50;
-      const marginRight = 50;
-      const usableWidth = pageWidth - marginLeft - marginRight;
-      let y = 50;
+    // Open a clean white print window with the CV content
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
 
-      const addNewPageIfNeeded = (neededHeight) => {
-        if (y + neededHeight > pageHeight - 40) {
-          pdf.addPage();
-          y = 50;
-        }
-      };
+    const printDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optimized CV</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-      lines.forEach(({ text, type }) => {
-        let fontSize, bold, spaceAfter, spaceBefore, lineColor;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        switch (type) {
-          case 'h1':
-            fontSize = 20; bold = true; spaceBefore = 16; spaceAfter = 8; lineColor = '#1a1a2e';
-            break;
-          case 'h2':
-            fontSize = 13; bold = true; spaceBefore = 12; spaceAfter = 5; lineColor = '#0e4fad';
-            break;
-          case 'h3':
-            fontSize = 11; bold = true; spaceBefore = 8; spaceAfter = 4; lineColor = '#333333';
-            break;
-          case 'li':
-            fontSize = 10; bold = false; spaceBefore = 2; spaceAfter = 2; lineColor = '#222222';
-            break;
-          default:
-            fontSize = 10; bold = false; spaceBefore = 3; spaceAfter = 3; lineColor = '#222222';
-        }
-
-        pdf.setFontSize(fontSize);
-        pdf.setFont('helvetica', bold ? 'bold' : 'normal');
-        pdf.setTextColor(lineColor);
-
-        // Wrap long lines
-        const wrappedLines = pdf.splitTextToSize(text, usableWidth);
-        const blockHeight = wrappedLines.length * fontSize * 1.3;
-
-        addNewPageIfNeeded(spaceBefore + blockHeight + spaceAfter);
-
-        y += spaceBefore;
-
-        // Draw a bottom border line for h2 section headers
-        if (type === 'h2') {
-          pdf.setDrawColor('#0e4fad');
-          pdf.setLineWidth(0.5);
-          wrappedLines.forEach((line) => {
-            pdf.text(line, marginLeft, y);
-            y += fontSize * 1.3;
-          });
-          pdf.line(marginLeft, y, pageWidth - marginRight, y);
-          y += 2;
-        } else {
-          wrappedLines.forEach((line) => {
-            pdf.text(line, marginLeft, y);
-            y += fontSize * 1.3;
-          });
-        }
-
-        y += spaceAfter;
-      });
-
-      pdf.save(finalFileName);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Failed to generate PDF. Check console for details.');
-    } finally {
-      setIsExporting(false);
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      background: white;
+      padding: 40px 50px;
+      line-height: 1.6;
     }
+
+    h1 {
+      font-size: 22pt;
+      font-weight: 700;
+      color: #0a0a23;
+      margin-bottom: 4px;
+    }
+
+    h2 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1a4fad;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1.5px solid #1a4fad;
+      padding-bottom: 3px;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-top: 10px;
+      margin-bottom: 3px;
+    }
+
+    p {
+      font-size: 10.5pt;
+      color: #2c2c2c;
+      margin-bottom: 5px;
+    }
+
+    ul {
+      padding-left: 18px;
+      margin-bottom: 6px;
+    }
+
+    li {
+      font-size: 10.5pt;
+      color: #2c2c2c;
+      margin-bottom: 3px;
+    }
+
+    @media print {
+      body { padding: 20px 30px; }
+      h2 { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+  ${htmlContent}
+  <script>
+    // Auto-trigger print dialog once fonts load
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+      }, 600);
+    };
+  </script>
+</body>
+</html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(printDoc);
+    printWindow.document.close();
+
+    setTimeout(() => setIsExporting(false), 1200);
   };
 
   return (
@@ -154,7 +115,7 @@ export default function DownloadCVButton({ htmlContent, disabled, defaultFileNam
       ) : (
         <Download size={18} />
       )}
-      {isExporting ? 'Generating PDF...' : 'Download PDF'}
+      {isExporting ? 'Opening...' : 'Download PDF'}
     </button>
   );
 }
