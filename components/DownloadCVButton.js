@@ -1,59 +1,55 @@
 'use client';
 import { useState } from 'react';
 import { Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
-// Parses the AI-generated HTML CV into a pdfmake content array
-function htmlToPdfMakeContent(htmlString) {
+// Converts the AI-generated HTML CV into structured text lines for jsPDF
+function parseHtmlToLines(htmlString) {
   if (typeof window === 'undefined') return [];
 
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlString, 'text/html');
-  const content = [];
+  const lines = [];
 
   const processNode = (node) => {
     const tag = node.nodeName.toLowerCase();
     const text = node.textContent?.trim() || '';
-
-    if (!text) return null;
+    if (!text) return;
 
     switch (tag) {
       case 'h1':
-        return { text, fontSize: 20, bold: true, margin: [0, 12, 0, 6], color: '#1a1a2e' };
+        lines.push({ text, type: 'h1' });
+        break;
       case 'h2':
-        return { text, fontSize: 14, bold: true, margin: [0, 10, 0, 4], color: '#0e4fad', decoration: 'underline' };
+        lines.push({ text, type: 'h2' });
+        break;
       case 'h3':
-        return { text, fontSize: 12, bold: true, margin: [0, 8, 0, 3], color: '#333333' };
+        lines.push({ text, type: 'h3' });
+        break;
       case 'p':
-        return { text, fontSize: 10, margin: [0, 2, 0, 4], color: '#222222', lineHeight: 1.4 };
-      case 'ul': {
-        const items = [];
-        node.querySelectorAll('li').forEach((li) => {
-          items.push({ text: li.textContent?.trim() || '', fontSize: 10, color: '#222222' });
-        });
-        return items.length > 0 ? { ul: items, margin: [0, 2, 0, 6] } : null;
-      }
+        lines.push({ text, type: 'p' });
+        break;
       case 'li':
-        return null; // handled by ul
-      default: {
-        // For divs, spans, sections — recurse into children
-        const children = [];
-        node.childNodes.forEach((child) => {
-          const result = processNode(child);
-          if (result) Array.isArray(result) ? children.push(...result) : children.push(result);
+        lines.push({ text: `• ${text}`, type: 'li' });
+        break;
+      case 'ul':
+      case 'ol':
+        node.querySelectorAll('li').forEach((li) => {
+          const liText = li.textContent?.trim() || '';
+          if (liText) lines.push({ text: `• ${liText}`, type: 'li' });
         });
-        return children.length > 0 ? children : null;
-      }
+        break;
+      case '#text':
+        // skip bare text nodes (whitespace)
+        break;
+      default:
+        // For divs, sections, etc — recurse into children
+        node.childNodes.forEach((child) => processNode(child));
     }
   };
 
-  doc.body.childNodes.forEach((node) => {
-    const result = processNode(node);
-    if (result) {
-      Array.isArray(result) ? content.push(...result) : content.push(result);
-    }
-  });
-
-  return content;
+  doc.body.childNodes.forEach((node) => processNode(node));
+  return lines;
 }
 
 export default function DownloadCVButton({ htmlContent, disabled, defaultFileName = 'Optimized_CV' }) {
@@ -68,33 +64,78 @@ export default function DownloadCVButton({ htmlContent, disabled, defaultFileNam
 
     setIsExporting(true);
     try {
-      // Dynamically import pdfmake to avoid SSR issues
-      const pdfMakeModule = await import('pdfmake/build/pdfmake');
-      const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
-      const pdfMake = pdfMakeModule.default || pdfMakeModule;
-      const pdfFonts = pdfFontsModule.default || pdfFontsModule;
-      // pdfmake stores fonts in pdfFonts.vfs (not pdfFonts.pdfMake.vfs)
-      pdfMake.vfs = pdfFonts.vfs;
+      const lines = parseHtmlToLines(htmlContent);
 
-      const content = htmlToPdfMakeContent(htmlContent);
+      const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const marginLeft = 50;
+      const marginRight = 50;
+      const usableWidth = pageWidth - marginLeft - marginRight;
+      let y = 50;
 
-      const docDefinition = {
-        content: content.length > 0 ? content : [{ text: 'No content available.' }],
-        pageMargins: [50, 50, 50, 50],
-        pageSize: 'A4',
-        defaultStyle: {
-          font: 'Roboto',
-          fontSize: 10,
-          color: '#222222',
-        },
-        styles: {
-          header: { fontSize: 20, bold: true },
-        },
+      const addNewPageIfNeeded = (neededHeight) => {
+        if (y + neededHeight > pageHeight - 40) {
+          pdf.addPage();
+          y = 50;
+        }
       };
 
-      pdfMake.createPdf(docDefinition).download(finalFileName);
+      lines.forEach(({ text, type }) => {
+        let fontSize, bold, spaceAfter, spaceBefore, lineColor;
+
+        switch (type) {
+          case 'h1':
+            fontSize = 20; bold = true; spaceBefore = 16; spaceAfter = 8; lineColor = '#1a1a2e';
+            break;
+          case 'h2':
+            fontSize = 13; bold = true; spaceBefore = 12; spaceAfter = 5; lineColor = '#0e4fad';
+            break;
+          case 'h3':
+            fontSize = 11; bold = true; spaceBefore = 8; spaceAfter = 4; lineColor = '#333333';
+            break;
+          case 'li':
+            fontSize = 10; bold = false; spaceBefore = 2; spaceAfter = 2; lineColor = '#222222';
+            break;
+          default:
+            fontSize = 10; bold = false; spaceBefore = 3; spaceAfter = 3; lineColor = '#222222';
+        }
+
+        pdf.setFontSize(fontSize);
+        pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+        pdf.setTextColor(lineColor);
+
+        // Wrap long lines
+        const wrappedLines = pdf.splitTextToSize(text, usableWidth);
+        const blockHeight = wrappedLines.length * fontSize * 1.3;
+
+        addNewPageIfNeeded(spaceBefore + blockHeight + spaceAfter);
+
+        y += spaceBefore;
+
+        // Draw a bottom border line for h2 section headers
+        if (type === 'h2') {
+          pdf.setDrawColor('#0e4fad');
+          pdf.setLineWidth(0.5);
+          wrappedLines.forEach((line) => {
+            pdf.text(line, marginLeft, y);
+            y += fontSize * 1.3;
+          });
+          pdf.line(marginLeft, y, pageWidth - marginRight, y);
+          y += 2;
+        } else {
+          wrappedLines.forEach((line) => {
+            pdf.text(line, marginLeft, y);
+            y += fontSize * 1.3;
+          });
+        }
+
+        y += spaceAfter;
+      });
+
+      pdf.save(finalFileName);
     } catch (error) {
-      console.error('Error generating text-based PDF:', error);
+      console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Check console for details.');
     } finally {
       setIsExporting(false);
