@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { AlertCircle, Download, FileText } from 'lucide-react';
+import { AlertCircle, Download, FileText, Edit3 } from 'lucide-react';
 import ScoreComparison from './ScoreComparison';
 import CVPreview from './CVPreview';
 import CoverLetterTab from './CoverLetterTab';
@@ -70,20 +70,35 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           </div>
 
           {activeTab === 'cv' && (
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <button 
                 className="btn btn-glass"
                 onClick={() => onSetAsBase(results.optimized_cv)}
+                style={{ fontSize: '0.85rem' }}
               >
                 Use as Current CV
               </button>
+              
               <button 
-                className="btn btn-primary"
+                className="btn"
                 onClick={() => setShowEditor(true)}
-                style={{ background: 'var(--secondary)', color: 'white' }}
+                style={{ 
+                  background: 'linear-gradient(135deg, var(--secondary) 0%, #3b82f6 100%)', 
+                  color: 'white',
+                  fontWeight: 600,
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  boxShadow: '0 0 20px rgba(99, 102, 241, 0.4)',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer'
+                }}
               >
-                Customize layout
+                <Edit3 size={18} /> Edit & Customize PDF
               </button>
+
               <DownloadPDFAction 
                 document={<OptimizedCVDocument htmlContent={results.optimized_cv} />} 
                 disabled={false} 
