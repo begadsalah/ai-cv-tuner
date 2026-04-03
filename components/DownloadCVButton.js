@@ -71,8 +71,10 @@ export default function DownloadCVButton({ htmlContent, disabled, defaultFileNam
       // Dynamically import pdfmake to avoid SSR issues
       const pdfMakeModule = await import('pdfmake/build/pdfmake');
       const pdfFontsModule = await import('pdfmake/build/vfs_fonts');
-      const pdfMake = pdfMakeModule.default;
-      pdfMake.vfs = pdfFontsModule.default?.pdfMake?.vfs || pdfFontsModule.pdfMake?.vfs;
+      const pdfMake = pdfMakeModule.default || pdfMakeModule;
+      const pdfFonts = pdfFontsModule.default || pdfFontsModule;
+      // pdfmake stores fonts in pdfFonts.vfs (not pdfFonts.pdfMake.vfs)
+      pdfMake.vfs = pdfFonts.vfs;
 
       const content = htmlToPdfMakeContent(htmlContent);
 
