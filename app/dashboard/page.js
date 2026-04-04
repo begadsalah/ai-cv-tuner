@@ -71,7 +71,11 @@ export default function Dashboard() {
         
         {/* Left Side: Inputs */}
         <div style={{ width: '400px', display: 'flex', flexDirection: 'column', gap: '1.5rem', flexShrink: 0 }}>
-          <UploadCV onTextExtracted={(text) => setCvText(text)} />
+          <UploadCV onTextExtracted={(text) => {
+             setCvText(text);
+             setResults(null);
+             setAdditionalContext('');
+          }} />
           <JobDescriptionInput value={jobDescription} onChange={setJobDescription} />
           
           <button 

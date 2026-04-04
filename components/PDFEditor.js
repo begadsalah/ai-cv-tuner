@@ -230,7 +230,7 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
               style={{ 
                 flex: 1, width: '100%', background: 'transparent', border: 'none',
                 padding: '20px', color: '#f3f4f6', fontFamily: 'Inter, system-ui, sans-serif', fontSize: '0.95rem',
-                lineHeight: 1.6, resize: 'none', outline: 'none'
+                lineHeight: 1.6, resize: 'none', outline: 'none', wordWrap: 'break-word', whiteSpace: 'pre-wrap'
               }}
             />
           </div>

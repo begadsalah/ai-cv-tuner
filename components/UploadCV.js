@@ -40,20 +40,34 @@ export default function UploadCV({ onTextExtracted }) {
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
-          const pageText = textContent.items.map(item => item.str).join(' ');
+          
+          let lastY = -1;
+          let pageText = '';
+          
+          textContent.items.forEach(item => {
+             // If Y coordinate drops significantly, it's a new line
+             if (lastY !== -1 && Math.abs(lastY - item.transform[5]) > 4) {
+                 pageText += '\n';
+             }
+             pageText += item.str + ' ';
+             lastY = item.transform[5];
+          });
+          
           fullText += pageText + '\n\n';
 
           // Extract link annotations
           const annotations = await page.getAnnotations();
           annotations.forEach(a => {
             if (a.subtype === 'Link' && a.url) {
-              // Ensure we don't grab duplicate links on the same page unnecessarily
               if (!extractedLinks.some(l => l.url === a.url)) {
                 extractedLinks.push({ url: a.url, page: i });
               }
             }
           });
         }
+
+        // Sanitization: Normalize spaces and fix condensed "skill arrays"
+        fullText = fullText.replace(/\s{3,}/g, '\n').replace(/([a-z])([A-Z])/g, '$1 $2');
 
         if (fullText.trim().length < 50) {
           setFileName('');
