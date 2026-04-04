@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle } from 'lucide-react';
+import { UploadCloud, FileText, CheckCircle, Link as LinkIcon, ArrowRight, SkipForward } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // We must set the worker source. Pointing to unpkg or cdnjs matches the version
@@ -10,6 +10,13 @@ export default function UploadCV({ onTextExtracted }) {
   const [isHovering, setIsHovering] = useState(false);
   const [fileName, setFileName] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  
+  // Link Wizard States
+  const [detectedLinks, setDetectedLinks] = useState([]);
+  const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
+  const [baseExtractedText, setBaseExtractedText] = useState('');
+  const [approvedUrls, setApprovedUrls] = useState([]);
+
   const fileInputRef = useRef(null);
 
   const handleFile = async (file) => {
@@ -28,29 +35,43 @@ export default function UploadCV({ onTextExtracted }) {
         const typedarray = new Uint8Array(this.result);
         const pdf = await pdfjsLib.getDocument(typedarray).promise;
         let fullText = '';
+        let extractedLinks = [];
         
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           const pageText = textContent.items.map(item => item.str).join(' ');
           fullText += pageText + '\n\n';
+
+          // Extract link annotations
+          const annotations = await page.getAnnotations();
+          annotations.forEach(a => {
+            if (a.subtype === 'Link' && a.url) {
+              // Ensure we don't grab duplicate links on the same page unnecessarily
+              if (!extractedLinks.some(l => l.url === a.url)) {
+                extractedLinks.push({ url: a.url, page: i });
+              }
+            }
+          });
         }
 
-        // Guard: if the extracted text is too short, the PDF is likely
-        // image-based or uses an unsupported font encoding.
         if (fullText.trim().length < 50) {
           setFileName('');
           setIsExtracting(false);
-          alert(
-            'Could not extract readable text from this PDF.\n\n' +
-            'This usually happens when the PDF is image-based (a scanned photo).\n\n' +
-            'Please upload your original CV PDF, not a downloaded/scanned version.'
-          );
+          alert('Could not extract readable text from this PDF. Please upload raw text PDF instead of images.');
           return;
         }
 
-        onTextExtracted(fullText);
-        setIsExtracting(false);
+        if (extractedLinks.length > 0) {
+          setBaseExtractedText(fullText);
+          setDetectedLinks(extractedLinks);
+          setIsExtracting(false); 
+          // Link Wizard takes over!
+        } else {
+          // No links found, just finish extraction
+          onTextExtracted(fullText);
+          setIsExtracting(false);
+        }
       };
 
       fileReader.readAsArrayBuffer(file);
@@ -59,6 +80,38 @@ export default function UploadCV({ onTextExtracted }) {
       alert('Failed to extract text from PDF.');
       setIsExtracting(false);
       setFileName('');
+    }
+  };
+
+  const finalizeTextExtraction = (approved) => {
+    let finalPayload = baseExtractedText;
+    if (approved.length > 0) {
+      finalPayload += '\n\n=== Embedded URLs ===\n';
+      approved.forEach(url => {
+        finalPayload += `${url}\n`;
+      });
+    }
+    // Cleanup states and push forward
+    setDetectedLinks([]);
+    setCurrentLinkIndex(0);
+    setApprovedUrls([]);
+    onTextExtracted(finalPayload);
+  };
+
+  const handleLinkDecision = (isInclude) => {
+    const activeLink = detectedLinks[currentLinkIndex];
+    const newApproved = [...approvedUrls];
+    
+    if (isInclude) {
+      newApproved.push(activeLink.url);
+    }
+    
+    setApprovedUrls(newApproved);
+
+    if (currentLinkIndex + 1 < detectedLinks.length) {
+      setCurrentLinkIndex(currentLinkIndex + 1);
+    } else {
+      finalizeTextExtraction(newApproved);
     }
   };
 
@@ -78,6 +131,39 @@ export default function UploadCV({ onTextExtracted }) {
     const files = e.dataTransfer.files;
     if (files.length > 0) handleFile(files[0]);
   };
+
+  // If we are iterating through detected links, show the Wizard!
+  if (detectedLinks.length > 0) {
+    const currentLink = detectedLinks[currentLinkIndex];
+    return (
+      <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', minHeight: '200px' }}>
+        <h3 style={{ color: '#60a5fa', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <LinkIcon size={20} /> Hidden Link Detected
+        </h3>
+        
+        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: 1.5 }}>
+          Your CV contains hyperlinked text pointing to an external domain. Would you like to explicitly include this URL so the AI can analyze your portfolio/LinkedIn?
+        </p>
+
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem', wordBreak: 'break-all', color: 'white', fontFamily: 'monospace', fontSize: '0.9rem' }}>
+          {currentLink.url}
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto' }}>
+          <button className="btn btn-glass" onClick={() => handleLinkDecision(false)} style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            <SkipForward size={16} /> Skip 
+          </button>
+          <button className="btn btn-primary" onClick={() => handleLinkDecision(true)} style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}>
+            Include URL <ArrowRight size={16} />
+          </button>
+        </div>
+        
+        <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '1rem' }}>
+           Link {currentLinkIndex + 1} of {detectedLinks.length}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

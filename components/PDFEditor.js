@@ -204,10 +204,10 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', flex: 1, minHeight: '650px', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', gap: '1rem', flex: 1, minHeight: '650px', flexWrap: 'wrap', overflowY: 'auto' }}>
         
         {/* Left Professional Settings / Editor Panel */}
-        <div className="glass-panel" style={{ width: '400px', display: 'flex', flexDirection: 'column', height: '100%', padding: 0 }}>
+        <div className="glass-panel" style={{ flex: '1 1 350px', maxWidth: '100%', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', padding: 0 }}>
           
           {/* EDITOR TAB */}
           <div style={{ display: activeTab === 'editor' ? 'flex' : 'none', flexDirection: 'column', height: '100%' }}>
@@ -327,8 +327,8 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
 
         {/* Live Preview Pane */}
         {/* We use React PDFViewer connected to exclusively Debounced states */}
-        <div className="glass-panel" style={{ flex: 1, padding: 0, overflow: 'hidden', background: '#e5e7eb', border: '2px solid rgba(255,255,255,0.1)' }}>
-          <PDFViewer style={{ width: '100%', height: '100%', border: 'none', transition: 'opacity 0.3s' }} showToolbar={false}>
+        <div className="glass-panel" style={{ flex: '2 1 400px', padding: 0, overflow: 'hidden', background: '#e5e7eb', border: '2px solid rgba(255,255,255,0.1)', minHeight: '500px' }}>
+          <PDFViewer style={{ width: '100%', height: '100%', minHeight: '500px', border: 'none', transition: 'opacity 0.3s' }} showToolbar={false}>
             <OptimizedCVDocument htmlContent={debouncedHtmlContent} settings={debouncedSettings} />
           </PDFViewer>
         </div>
