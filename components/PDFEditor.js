@@ -1,14 +1,71 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { Download, Maximize2, Edit3, Settings, ChevronLeft, AlignLeft } from 'lucide-react';
+import { Download, Maximize2, Edit3, Settings, ChevronLeft, AlignLeft, Sparkles } from 'lucide-react';
 import OptimizedCVDocument from './OptimizedCVDocument';
 
+// Custom Hook to Debounce PDF Engine Rendering and fix flickering
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+// Plain Text <=> HTML Converters
+const htmlToText = (html) => {
+  if (!html) return '';
+  let txt = html.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n');
+  txt = txt.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n');
+  txt = txt.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n');
+  txt = txt.replace(/<li[^>]*>(.*?)<\/li>/gi, '• $1\n');
+  txt = txt.replace(/<ul[^>]*>/gi, '').replace(/<\/ul>/gi, '\n');
+  txt = txt.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n');
+  txt = txt.replace(/<[^>]+>/g, ''); // strip remaining tags
+  return txt.replace(/\n{3,}/g, '\n\n').trim();
+};
+
+const textToHtml = (text) => {
+  if (!text) return '';
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+
+  lines.forEach(line => {
+    let t = line.trim();
+    if (!t) return;
+
+    if (t.startsWith('# ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<h1>${t.replace(/^# /, '')}</h1>`;
+    } else if (t.startsWith('## ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<h2>${t.replace(/^## /, '')}</h2>`;
+    } else if (t.startsWith('### ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<h3>${t.replace(/^### /, '')}</h3>`;
+    } else if (t.startsWith('• ') || t.startsWith('- ')) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += `<li>${t.replace(/^[•\-]\s*/, '')}</li>`;
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p>${t}</p>`;
+    }
+  });
+  if (inList) html += '</ul>';
+  return html;
+};
+
 const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) => {
-  const [activeTab, setActiveTab] = useState('layout'); // 'layout' or 'content'
-  const [editedContent, setEditedContent] = useState(htmlContent);
+  const [activeTab, setActiveTab] = useState('layout'); 
+  const [markdownContent, setMarkdownContent] = useState('');
   
-  // Expose advanced layout settings targeting Problem 2
   const [settings, setSettings] = useState({
     fontSize: 10.5,
     marginTop: 40,
@@ -20,14 +77,18 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
   });
 
   const [isExporting, setIsExporting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [isClient, setIsClient] = useState(false);
+
+  // Debounced payload for the renderer mapping
+  const debouncedSettings = useDebounce(settings, 500);
+  const debouncedHtmlContent = useDebounce(textToHtml(markdownContent), 800);
 
   useEffect(() => {
     setIsClient(true);
-    setEditedContent(htmlContent);
+    setMarkdownContent(htmlToText(htmlContent));
   }, [htmlContent]);
 
-  // Handle Safe Blob Implementation (Problem 5: Standard compliance)
   const handleDownload = async () => {
     const fileNameInput = window.prompt('Enter file name for download:', defaultFileName);
     if (!fileNameInput) return;
@@ -35,15 +96,11 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
 
     setIsExporting(true);
     try {
-      // 1. Generate Blob natively from @react-pdf
       const generatedBlob = await pdf(
-        <OptimizedCVDocument htmlContent={editedContent} settings={settings} />
+        <OptimizedCVDocument htmlContent={textToHtml(markdownContent)} settings={settings} />
       ).toBlob();
       
-      // 2. Explicitly cast as application/pdf to guarantee OS file handler compliance
       const safeBlob = new Blob([generatedBlob], { type: 'application/pdf' });
-      
-      // 3. Create anchor, trigger download, execute safe memory cleanup
       const url = URL.createObjectURL(safeBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -59,6 +116,30 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
       alert('Failed to export PDF.');
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleSmartCompress = async () => {
+    setIsCompressing(true);
+    try {
+      const response = await fetch('/api/compress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ htmlContent: textToHtml(markdownContent) })
+      });
+      
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+      
+      // Load compressed payload back into Markdown
+      if (result.compressed_html) {
+         setMarkdownContent(htmlToText(result.compressed_html));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Smart Compress Failed. Ensure Gemini token is valid.');
+    } finally {
+      setIsCompressing(false);
     }
   };
 
@@ -90,7 +171,6 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', color: 'white' }}>
-      {/* Header Controls */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button onClick={onBack} className="btn btn-glass" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <ChevronLeft size={18} /> Back
@@ -125,7 +205,6 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
       </div>
 
       <div style={{ display: 'flex', gap: '1rem', flex: 1, minHeight: '650px' }}>
-        {/* Editor Sidebar */}
         <div className="glass-panel" style={{ width: '320px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem' }}>
             {activeTab === 'layout' ? (
@@ -183,27 +262,43 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
               </>
             ) : (
               <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <h4 style={{ marginBottom: '0.5rem', opacity: 0.8 }}>Raw Content Editor</h4>
-                <p style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '1rem' }}>Edit the raw text below. Changes will reflect instantly.</p>
+                <h4 style={{ marginBottom: '0.5rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <AlignLeft size={16} /> Plain Text Content Editor
+                </h4>
+                <p style={{ fontSize: '0.75rem', opacity: 0.6, marginBottom: '1rem' }}>
+                  Edit naturally. Use <code>#</code> for headings and <code>•</code> for lists.
+                </p>
                 <textarea 
-                  value={editedContent}
-                  onChange={(e) => setEditedContent(e.target.value)}
+                  value={markdownContent}
+                  onChange={(e) => setMarkdownContent(e.target.value)}
                   style={{ 
                     flex: 1, width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)',
-                    borderRadius: '8px', padding: '10px', color: 'white', fontFamily: 'monospace', fontSize: '0.85rem',
-                    resize: 'none', outline: 'none'
+                    borderRadius: '8px', padding: '12px', color: 'white', fontFamily: 'inherit', fontSize: '0.9rem',
+                    lineHeight: 1.6, resize: 'none', outline: 'none'
                   }}
                 />
+                <button 
+                  onClick={handleSmartCompress} 
+                  disabled={isCompressing}
+                  style={{ 
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
+                    border: '1px solid rgba(147, 51, 234, 0.4)',
+                    color: 'white', padding: '10px', borderRadius: '8px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                    marginTop: '1rem', cursor: 'pointer', fontSize: '0.85rem'
+                   }}
+                >
+                  <Sparkles size={14} color="#d8b4fe" /> {isCompressing ? 'Running Gemini AI...' : 'AI Smart ATS Compress'}
+                </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Live Preview Pane */}
-        {/* Problem 1 / Pagination: We use React PDFViewer natively. It strictly parses the document nodes and dynamically creates pages on overflow. */}
         <div className="glass-panel" style={{ flex: 1, padding: 0, overflow: 'hidden', background: '#e5e7eb', border: '2px solid rgba(255,255,255,0.1)' }}>
           <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }} showToolbar={false}>
-            <OptimizedCVDocument htmlContent={editedContent} settings={settings} />
+            {/* The Viewer renders off of DEBOUNCED values, stopping all screen flickering completely */}
+            <OptimizedCVDocument htmlContent={debouncedHtmlContent} settings={debouncedSettings} />
           </PDFViewer>
         </div>
       </div>
