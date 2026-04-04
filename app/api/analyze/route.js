@@ -33,6 +33,7 @@ Task:
 1. Calculate the ATS match score (0-100) for the current CV against the Job Description.
 2. Rewrite and optimize the CV to perfectly match the job description. Do not fabricate experience. 
    CRITICAL PRO-LEVEL OPTIMIZATION: 
+   - Detect the language of the Job Description natively (e.g. English, German). You MUST generate the entire optimized CV, section headers, and cover letter natively in the exact language of the Job Description (e.g., use 'Berufserfahrung' for German or 'Experience' for English) to match ATS filtering rules completely.
    - Detect weak action verbs ("helped", "worked on", "managed") and replace them with strong industry-leading verbs ("Orchestrated", "Architected", "Engineered").
    - Eliminate redundant bullet points by merging them logically.
    - For Skills and Technologies sections, group them inline laterally (e.g., "Languages: Python, Java") rather than printing massive vertical bullet lists.

@@ -21,7 +21,8 @@ function useDebounce(value, delay) {
 // Plain Text <=> HTML Converters with Pro Formatting Support
 const htmlToText = (html) => {
   if (!html) return '';
-  let txt = html.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n');
+  let txt = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ''); // Purge raw CSS leaks
+  txt = txt.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n');
   txt = txt.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n');
   txt = txt.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n');
   txt = txt.replace(/<strong[^>]*>(.*?)<\/strong>/gi, '**$1**');
@@ -179,7 +180,7 @@ const PDFEditor = ({ htmlContent, defaultFileName = 'Optimized_CV', onBack }) =>
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem', color: 'white' }}>
       
       {/* SaaS High-End Top Toolbar */}
-      <div className="glass-panel" style={{ padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
+      <div className="glass-panel" style={{ flexShrink: 0, padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <button onClick={onBack} className="btn btn-glass" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }}>
             <ChevronLeft size={16} /> Back to Hub

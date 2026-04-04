@@ -145,9 +145,20 @@ export default function UploadCV({ onTextExtracted }) {
           Your CV contains hyperlinked text pointing to an external domain. Would you like to explicitly include this URL so the AI can analyze your portfolio/LinkedIn?
         </p>
 
-        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem', wordBreak: 'break-all', color: 'white', fontFamily: 'monospace', fontSize: '0.9rem' }}>
-          {currentLink.url}
-        </div>
+        <input
+          type="text"
+          value={currentLink.url}
+          onChange={(e) => {
+             const newLinks = [...detectedLinks];
+             newLinks[currentLinkIndex].url = e.target.value;
+             setDetectedLinks(newLinks);
+          }}
+          style={{ 
+             width: '100%', background: 'rgba(0,0,0,0.5)', padding: '12px', borderRadius: '8px', 
+             border: '1px solid #60a5fa', marginBottom: '1.5rem', color: 'white', 
+             fontFamily: 'monospace', fontSize: '0.9rem' 
+          }}
+        />
 
         <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto' }}>
           <button className="btn btn-glass" onClick={() => handleLinkDecision(false)} style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}>
