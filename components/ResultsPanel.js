@@ -159,7 +159,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
 
           {activeTab === 'cv' && !showEditor && (
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button className="btn btn-glass" onClick={() => onSetAsBase(results.optimized_cv)} style={{ fontSize: '0.85rem' }}>
+              <button className="btn btn-glass" onClick={() => onSetAsBase(results.optimized_cv_modular)} style={{ fontSize: '0.85rem' }}>
                 Use as Current CV
               </button>
               
@@ -206,13 +206,17 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           {showEditor ? (
              <PDFEditor 
-               htmlContent={results.optimized_cv} 
+               initialCvData={results.optimized_cv_modular} 
                onBack={() => setShowEditor(false)} 
                defaultFileName={`Optimized_CV_${new Date().toLocaleDateString()}`}
              />
           ) : (
             activeTab === 'cv' ? (
-              <CVPreview content={results.optimized_cv} />
+              <div style={{ height: '600px' }}>
+                <PDFViewer style={{ width: '100%', height: '100%', border: 'none' }} showToolbar={false}>
+                  <OptimizedCVDocument cvData={results.optimized_cv_modular} />
+                </PDFViewer>
+              </div>
             ) : (
               <CoverLetterTab content={results.cover_letter} />
             )

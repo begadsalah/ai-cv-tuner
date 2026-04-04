@@ -33,25 +33,32 @@ Task:
 1. Calculate the ATS match score (0-100) for the current CV against the Job Description.
 2. Rewrite and optimize the CV to perfectly match the job description. Do not fabricate experience. 
    CRITICAL PRO-LEVEL OPTIMIZATION: 
-   - IDEMPOTENCY LOCK: If the provided CV already appears highly optimized, condensed, or scores >85 (e.g., using dense lateral arrays like 'Languages: Python, Java'), DO NOT penalize the format. Treat this as a strictly positive ATS trait. Do not heavily restructure or delete its formatting. It is critical that an already-optimized CV maintains its high score and layout when re-uploaded.
-   - Detect the language of the Job Description natively (e.g. English, German). You MUST generate the entire optimized CV, section headers, and cover letter natively in the exact language of the Job Description (e.g., use 'Berufserfahrung' for German or 'Experience' for English) to match ATS filtering rules completely.
-   - Detect weak action verbs ("helped", "worked on", "managed") and replace them with strong industry-leading verbs ("Orchestrated", "Architected", "Engineered").
-   - Eliminate redundant bullet points by merging them logically.
-   - For Skills and Technologies sections, group them inline laterally (e.g., "Languages: Python, Java") rather than printing massive vertical bullet lists.
-   Structure the optimized CV completely with clean HTML tags (<h1>, <h2>, <h3>, <ul>, <li>, <p>).
+   - IDEMPOTENCY LOCK: If the provided CV already appears highly optimized, condensed, or scores >85, DO NOT penalize the format. Document structures like dense lateral arrays MUST be preserved.
+   - STRICT SEMANTIC OMISSIONS: Do not create redundant labels inside generic data lists. For example, under a Languages section, just list the languages. Do not write "Languages: English".
+   - LANGUAGE DETECTION: Detect the language of the Job Description natively (e.g. English, German). You MUST generate all text and section_titles exactly natively in that language (e.g., 'Berufserfahrung' instead of 'Experience').
+   - Replace weak verbs with strong active verbs. Merge redundant bullet points logically.
+
 3. Calculate the new projected ATS match score (0-100) after optimization.
-4. List 3 to 5 specific improvements made. Crucially, explicitly explain HOW each improvement maps directly to what this specific ATS is looking for based on the Job Description (e.g., "Upgraded 'handled database' to 'Architected Postgres clusters' to match JD keywords").
-5. Write a professional, tailored Cover Letter based on the optimized CV (return as plain text with newlines).
+4. List 3 to 5 specific improvements.
+5. Write a professional Cover Letter based on the optimized CV.
 6. Identify if any critical qualifications are completely missing. Return an array of missing data questions.
 
-Return a JSON object matching this schema. Your output must ONLY be the JSON payload so that it can be parsed immediately.
+Return a JSON object matching exactly this schema. Your output must ONLY be the JSON payload so that it can be parsed immediately.
 {
   "original_score": Number,
   "optimized_score": Number,
-  "improvements": [String, String, ...],
+  "improvements": [String, ...],
   "missing_info": [String, ...],
-  "optimized_cv": "HTML String with CV content.",
-  "cover_letter": "String of the cover letter with newlines"
+  "cover_letter": "...",
+  "optimized_cv_modular": {
+    "personal_info": { "name": "", "contact_details": "..." },
+    "summary": { "section_title": "Professional Summary", "content": "..." },
+    "experience": { "section_title": "Experience", "items": [ { "title": "", "company": "", "date": "", "bullets": ["..."] } ] },
+    "education": { "section_title": "Education", "items": [ { "degree": "", "school": "", "date": "", "bullets": ["..."] } ] },
+    "skills": { "section_title": "Skills", "items": ["..."] },
+    "languages": { "section_title": "Languages", "items": ["..."] },
+    "custom_projects": { "section_title": "Projects", "items": [ { "title": "", "description": "", "date": "", "bullets": ["..."] } ] }
+  }
 }
 `;
 

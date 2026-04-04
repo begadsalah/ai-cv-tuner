@@ -15,7 +15,7 @@ Font.register({
   ]
 });
 
-const OptimizedCVDocument = ({ htmlContent, settings = {} }) => {
+const OptimizedCVDocument = ({ cvData, settings = {} }) => {
   // Configurable layout parameters addressing Problem 2
   const {
     fontSize = 10.5,
@@ -99,98 +99,79 @@ const OptimizedCVDocument = ({ htmlContent, settings = {} }) => {
 
   const BulletPoint = ({ children }) => (
     <View style={styles.listItem} wrap={false}> 
-      {/* "wrap={false}" inside an LI ensures we don't awkwardly split a single bullet across two pages */}
       <Text style={styles.bulletPoint}>•</Text>
       <Text style={styles.listText}>{children}</Text>
     </View>
   );
 
-  /**
-   * ROBUST SCANNER (Safe HTML-to-PDF rendering without DOMParser)
-   * Captures 100% of text and safely maps them to PDF components.
-   */
-  const parseHTMLContent = (html) => {
-    if (!html) return [];
-
-    const decodeEntities = (str) =>
-      str.replace(/&amp;/g, '&')
-         .replace(/&lt;/g, '<')
-         .replace(/&gt;/g, '>')
-         .replace(/&quot;/g, '"')
-         .replace(/&#39;/g, "'")
-         .replace(/&nbsp;/g, ' ');
-
-    const cleanHtml = html.replace(/<!--[\s\S]*?-->/g, '').trim();
-    const parts = cleanHtml.split(/(<[^>]+>)/g);
-    
+  const renderModularContent = (cvData) => {
+    if (!cvData) return null;
     const components = [];
-    let currentTag = 'p';
-    let listItems = [];
-    let inList = false;
 
-    parts.forEach((part, index) => {
-      if (part.startsWith('<')) {
-        const tagName = part.replace(/[<>\/]/g, '').split(' ')[0].toLowerCase();
-        const isClosing = part.startsWith('</');
+    // Personal Info (Implicit H1 and subtitle block)
+    if (cvData.personal_info) {
+      if (cvData.personal_info.name) components.push(<Text key="name" style={styles.h1}>{cvData.personal_info.name}</Text>);
+      if (cvData.personal_info.contact_details) components.push(<Text key="contact" style={styles.p}>{cvData.personal_info.contact_details}</Text>);
+    }
 
-        if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p'].includes(tagName)) {
-          if (!isClosing) {
-            currentTag = tagName;
-          } else {
-            currentTag = 'p';
-          }
-        } else if (['ul', 'ol'].includes(tagName)) {
-          if (!isClosing) {
-            inList = true;
-            listItems = [];
-          } else {
-            if (listItems.length > 0) {
-              components.push(
-                // wrap={true} explicitly lets the list container break across pages if needed
-                <View key={`list-${index}`} style={{ marginBottom: sectionSpacing * 0.8 }} wrap={true}>
-                  {listItems.map((item, idx) => (
-                    <BulletPoint key={`li-${index}-${idx}`}>{item}</BulletPoint>
-                  ))}
-                </View>
-              );
-            }
-            inList = false;
-            listItems = [];
-          }
-        } else if (tagName === 'li' && !isClosing) {
-          currentTag = 'li';
-        }
-      } else {
-        const text = decodeEntities(part.trim());
-        if (!text) return;
+    // Generic Section Renderer
+    const renderSection = (key, dataBlock) => {
+      if (!dataBlock || (!dataBlock.content && (!dataBlock.items || dataBlock.items.length === 0))) return;
+      
+      components.push(<Text key={`h2-${key}`} style={styles.h2}>{dataBlock.section_title}</Text>);
 
-        if (inList && currentTag === 'li') {
-          listItems.push(text);
-        } else {
-          // Standard text rendering 
-          const styleKey = ['h1', 'h2', 'h3'].includes(currentTag) ? currentTag : 'p';
-          components.push(
-            <Text key={`text-${index}`} style={styles[styleKey]}>
-              {text}
-            </Text>
-          );
-        }
+      if (dataBlock.content) {
+        components.push(<Text key={`p-${key}`} style={styles.p}>{dataBlock.content}</Text>);
       }
-    });
+
+      if (dataBlock.items && Array.isArray(dataBlock.items)) {
+        dataBlock.items.forEach((item, index) => {
+          if (typeof item === 'string') {
+             // Simple array (Skills, Languages)
+             components.push(<Text key={`item-${key}-${index}`} style={styles.p}>{item}</Text>);
+          } else {
+             // Complex block (Experience, Education, Custom Projects)
+             if (item.title) components.push(<Text key={`h3-${key}-${index}`} style={styles.h3}>{item.title}</Text>);
+             
+             let subtext = [];
+             if (item.company) subtext.push(item.company);
+             if (item.school) subtext.push(item.school);
+             if (item.date) subtext.push(item.date);
+             if (subtext.length > 0) {
+               components.push(<Text key={`sub-${key}-${index}`} style={styles.p}>{subtext.join(' | ')}</Text>);
+             }
+             if (item.description) {
+               components.push(<Text key={`desc-${key}-${index}`} style={styles.p}>{item.description}</Text>);
+             }
+
+             if (item.bullets && Array.isArray(item.bullets) && item.bullets.length > 0) {
+               components.push(
+                 <View key={`list-${key}-${index}`} style={{ marginBottom: sectionSpacing * 0.8 }} wrap={true}>
+                   {item.bullets.map((b, idx) => (
+                     <BulletPoint key={`li-${key}-${index}-${idx}`}>{b}</BulletPoint>
+                   ))}
+                 </View>
+               );
+             }
+          }
+        });
+      }
+    };
+
+    renderSection('summary', cvData.summary);
+    renderSection('experience', cvData.experience);
+    renderSection('education', cvData.education);
+    renderSection('skills', cvData.skills);
+    renderSection('languages', cvData.languages);
+    renderSection('custom_projects', cvData.custom_projects);
 
     return components;
   };
 
   return (
     <Document>
-      {/* 
-        Problem 1 Fix: 
-        We pass the parsed array directly as children to `<Page>`. 
-        Removing outer <View> wrappers automatically lets @react-pdf/renderer execute 
-        its native pagination logic safely across multiple pages.
-      */}
       <Page size="A4" style={styles.page} wrap={true}>
-        {parseHTMLContent(htmlContent)}
+        {renderModularContent(cvData)}
         
         {/* Dynamic Multi-Page Footer */}
         <Text

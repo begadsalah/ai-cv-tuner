@@ -60,7 +60,18 @@ export default function UploadCV({ onTextExtracted }) {
           annotations.forEach(a => {
             if (a.subtype === 'Link' && a.url) {
               if (!extractedLinks.some(l => l.url === a.url)) {
-                extractedLinks.push({ url: a.url, page: i });
+                 let anchorTextContext = '';
+                 if (a.rect) {
+                   const [x1, y1, x2, y2] = a.rect;
+                   // Heuristic overlap mapping
+                   const overlappingItems = textContent.items.filter(item => {
+                       const itemX = item.transform[4];
+                       const itemY = item.transform[5];
+                       return (itemX >= x1 - 50 && itemX <= x2 + 50) && (Math.abs(itemY - y1) < 20 || Math.abs(itemY - y2) < 20);
+                   });
+                   anchorTextContext = overlappingItems.map(i => i.str).join(' ').trim();
+                 }
+                extractedLinks.push({ url: a.url, page: i, anchor: anchorTextContext || '[Hidden Document Mapping]' });
               }
             }
           });
@@ -158,6 +169,11 @@ export default function UploadCV({ onTextExtracted }) {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: 1.5 }}>
           Your CV contains hyperlinked text pointing to an external domain. Would you like to explicitly include this URL so the AI can analyze your portfolio/LinkedIn?
         </p>
+
+        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #60a5fa', marginBottom: '1rem' }}>
+           <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>Extracted Context:</p>
+           <p style={{ fontStyle: 'italic', fontWeight: 600 }}>"{currentLink.anchor || 'Unknown Mapping'}"</p>
+        </div>
 
         <input
           type="text"
