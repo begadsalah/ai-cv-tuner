@@ -344,18 +344,18 @@ export default function UploadCV({ onTextExtracted }) {
       {isExtracting ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div className="spinner" style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent', width: '40px', height: '40px', marginBottom: '1rem' }}></div>
-          <p style={{ fontWeight: 500, color: 'white' }}>Extracting text...</p>
+          <p style={{ fontWeight: 500, color: 'var(--text-primary)' }}>Extracting text...</p>
         </div>
       ) : fileName ? (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
           <CheckCircle size={48} color="#10b981" />
-          <p style={{ fontWeight: 600, color: 'white', marginTop: '1rem' }}>{fileName}</p>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: '1rem' }}>{fileName}</p>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Click or drag to replace</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
           <UploadCloud size={48} color="var(--secondary)" style={{ marginBottom: '1rem' }} />
-          <p style={{ fontWeight: 600, color: 'white', fontSize: '1.1rem' }}>Upload your current CV</p>
+          <p style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '1.1rem' }}>Upload your current CV</p>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>PDF format only</p>
         </div>
       )}

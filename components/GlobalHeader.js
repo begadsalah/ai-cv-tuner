@@ -69,7 +69,9 @@ export default function GlobalHeader() {
   };
 
   const toggleLang = () => {
-    const newLang = lang === 'English' ? 'German' : 'English';
+    const langs = ['English', 'German', 'Spanish', 'French', 'Arabic'];
+    const idx = langs.indexOf(lang);
+    const newLang = langs[(idx + 1) % langs.length];
     setLang(newLang);
     localStorage.setItem('app_lang', newLang);
     setIsMenuOpen(false);
@@ -84,7 +86,7 @@ export default function GlobalHeader() {
 
   return (
     <>
-    <header style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', borderBottom: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 100 }}>
+    <header style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--nav-bg)', borderBottom: '1px solid var(--glass-border)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 100 }}>
       <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={{ fontWeight: 'bold', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '8px', borderRadius: '8px', display: 'flex' }}>
@@ -126,7 +128,7 @@ export default function GlobalHeader() {
               <div className="glass-panel animate-fade-in" style={{ position: 'absolute', top: 'calc(100% + 12px)', right: 0, width: '260px', padding: '0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)' }}>
                 
                 {/* User Header Block */}
-                <div style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)' }}>
+                <div style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', background: 'var(--panel-bg)' }}>
                   <span style={{ display: 'block', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem' }}>{user.user_metadata?.full_name || 'Pro User'}</span>
                   <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</span>
                 </div>

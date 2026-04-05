@@ -12,11 +12,13 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 24px;
+  --nav-bg: rgba(15, 23, 42, 0.4);
+  --panel-bg: rgba(0, 0, 0, 0.2);
 }
 
 :root[data-theme="light"] {
   --primary: #2563EB;
-  --secondary: #0284c7;
+  --secondary: #0369a1; /* Darkened for better white contrast */
   --bg-gradient-start: #f8fafc;
   --bg-gradient-end: #e2e8f0;
   --glass-bg: rgba(255, 255, 255, 0.7);
@@ -25,6 +27,8 @@
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-dark: #0f172a;
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --panel-bg: rgba(241, 245, 249, 0.8);
 }
 
 * {
@@ -97,17 +101,17 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(135deg, var(--secondary), #a78bfa);
+  background-image: linear-gradient(135deg, var(--secondary), var(--primary));
 }
 
 /* Forms */
 textarea, input {
   width: 100%;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--panel-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   padding: 12px;
-  color: white;
+  color: var(--text-primary);
   font-family: inherit;
   transition: border-color 0.2s;
 }
