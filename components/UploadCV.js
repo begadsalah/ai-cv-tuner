@@ -67,7 +67,7 @@ export default function UploadCV({ onTextExtracted }) {
                    const overlappingItems = textContent.items.filter(item => {
                        const itemX = item.transform[4];
                        const itemY = item.transform[5];
-                       return (itemX >= x1 - 50 && itemX <= x2 + 50) && (Math.abs(itemY - y1) < 20 || Math.abs(itemY - y2) < 20);
+                       return (itemX >= x1 - 5 && itemX <= x2 + 5) && (Math.abs(itemY - y1) < 5 || Math.abs(itemY - y2) < 5);
                    });
                    anchorTextContext = overlappingItems.map(i => i.str).join(' ').trim();
                  }
@@ -161,7 +161,7 @@ export default function UploadCV({ onTextExtracted }) {
   if (detectedLinks.length > 0) {
     const currentLink = detectedLinks[currentLinkIndex];
     return (
-      <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', minHeight: '200px' }}>
+      <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', minHeight: '280px', overflow: 'hidden' }}>
         <h3 style={{ color: '#60a5fa', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <LinkIcon size={20} /> Hidden Link Detected
         </h3>

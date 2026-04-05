@@ -39,6 +39,11 @@ Task:
    - Replace weak verbs with strong active verbs. Merge redundant bullet points logically.
    - NO HARD LINE BREAKS: Within atomic values (like email, phone, location), NEVER insert newlines (\n) or HTML breaks. Keep strings perfectly inline.
 
+   SMART 1-PAGE ENFORCEMENT & ERGONOMICS:
+   - Perform Semantic Compression: If the CV is excessively long, you must reduce total character count by 15%. Do this by merging fragmented bullets into single high-impact action sentences. Replace long phrases with dense verbs.
+   - CATEGORICAL SKILLS: For the Skills section, enforce a strict "Category: Technology1, Technology2" format (e.g. "Tracking: GA4, GTM, Adobe Launch").
+   - ZERO DATA LOSS ON CONTACTS: NEVER delete or truncate Location (e.g., Mannheim) or Contact Details. These are hard ATS requirements.
+
 3. Calculate the new projected ATS match score (0-100) after optimization.
 4. List 3 to 5 specific improvements.
 5. Write a professional Cover Letter based on the optimized CV.

@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { Download, Edit3, Settings, ChevronLeft, Layout, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { Download, Edit3, Settings, ChevronLeft, Layout, Sparkles, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import OptimizedCVDocument from './OptimizedCVDocument';
 
 // Custom Hook to Debounce PDF Engine Rendering and fix flickering
@@ -18,6 +18,7 @@ function useDebounce(value, delay) {
 
 const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) => {
   const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'layout', 'ats'
+  const [activeAccordion, setActiveAccordion] = useState('personal_info');
   const [cvData, setCvData] = useState(initialCvData || {});
   
   const [settings, setSettings] = useState({
@@ -172,59 +173,104 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
           {/* EDITOR TAB - MODULAR */}
           <div style={{ display: activeTab === 'editor' ? 'flex' : 'none', flexDirection: 'column', height: '100%', overflowY: 'auto', padding: '20px' }}>
             
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Personal Info</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '2rem' }}>
-              <input type="text" placeholder="Name" value={cvData?.personal_info?.name || ''} onChange={(e) => updatePersonalInfo('name', e.target.value)} className="modular-input" style={{ gridColumn: '1 / -1', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
-              <input type="email" placeholder="Email" value={cvData?.personal_info?.email || ''} onChange={(e) => updatePersonalInfo('email', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
-              <input type="tel" placeholder="Phone" value={cvData?.personal_info?.phone || ''} onChange={(e) => updatePersonalInfo('phone', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
-              <input type="text" placeholder="Location" value={cvData?.personal_info?.location || ''} onChange={(e) => updatePersonalInfo('location', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
-              <input type="url" placeholder="LinkedIn / Portfolio" value={cvData?.personal_info?.linkedin || ''} onChange={(e) => updatePersonalInfo('linkedin', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+            {/* Personal Info Accordion */}
+            <div style={{ marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+              <button 
+                onClick={() => setActiveAccordion(activeAccordion === 'personal_info' ? null : 'personal_info')}
+                style={{ width: '100%', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', borderBottom: activeAccordion === 'personal_info' ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Personal Info</h3>
+                {activeAccordion === 'personal_info' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </button>
+              
+              {activeAccordion === 'personal_info' && (
+                <div style={{ padding: '15px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <input type="text" placeholder="Name" value={cvData?.personal_info?.name || ''} onChange={(e) => updatePersonalInfo('name', e.target.value)} className="modular-input" style={{ gridColumn: '1 / -1', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+                    <input type="email" placeholder="Email" value={cvData?.personal_info?.email || ''} onChange={(e) => updatePersonalInfo('email', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+                    <input type="tel" placeholder="Phone" value={cvData?.personal_info?.phone || ''} onChange={(e) => updatePersonalInfo('phone', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+                    <input type="text" placeholder="Location" value={cvData?.personal_info?.location || ''} onChange={(e) => updatePersonalInfo('location', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+                    <input type="url" placeholder="LinkedIn / Portfolio" value={cvData?.personal_info?.linkedin || ''} onChange={(e) => updatePersonalInfo('linkedin', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Summary</h3>
-            <input type="text" placeholder="Section Title" value={cvData?.summary?.section_title || 'Summary'} onChange={(e) => updateSection('summary', 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '10px' }} />
-            <textarea value={cvData?.summary?.content || ''} onChange={(e) => updateSection('summary', 'content', e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px', minHeight: '100px', marginBottom: '2rem' }} />
+            {/* Summary Accordion */}
+            <div style={{ marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+              <button 
+                onClick={() => setActiveAccordion(activeAccordion === 'summary' ? null : 'summary')}
+                style={{ width: '100%', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', borderBottom: activeAccordion === 'summary' ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Summary</h3>
+                {activeAccordion === 'summary' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+              </button>
+              
+              {activeAccordion === 'summary' && (
+                <div style={{ padding: '15px' }}>
+                  <input type="text" placeholder="Section Title" value={cvData?.summary?.section_title || 'Summary'} onChange={(e) => updateSection('summary', 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '10px' }} />
+                  <textarea value={cvData?.summary?.content || ''} onChange={(e) => updateSection('summary', 'content', e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px', minHeight: '100px' }} />
+                </div>
+              )}
+            </div>
 
             {['experience', 'education', 'custom_projects'].map((section) => (
-              <div key={section} style={{ marginBottom: '2rem' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                   <h3 style={{ fontSize: '1.2rem', textTransform: 'capitalize' }}>{section.replace('_', ' ')}</h3>
-                   <button onClick={() => addArrayItem(section)} style={{ background: 'rgba(59, 130, 246, 0.2)', border: 'none', color: '#93c5fd', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}><Plus size={14} /> Add</button>
-                 </div>
+              <div key={section} style={{ marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                 <button 
+                   onClick={() => setActiveAccordion(activeAccordion === section ? null : section)}
+                   style={{ width: '100%', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', borderBottom: activeAccordion === section ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                     <h3 style={{ fontSize: '1.1rem', margin: 0, textTransform: 'capitalize' }}>{section.replace('_', ' ')}</h3>
+                     <span onClick={(e) => { e.stopPropagation(); addArrayItem(section); }} style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#93c5fd', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', cursor: 'pointer' }}><Plus size={14} /> Add</span>
+                   </div>
+                   {activeAccordion === section ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                 </button>
                  
-                 <input type="text" placeholder="Section Title" value={cvData?.[section]?.section_title || section} onChange={(e) => updateSection(section, 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '1rem' }} />
+                 {activeAccordion === section && (
+                   <div style={{ padding: '15px' }}>
+                     <input type="text" placeholder="Section Title" value={cvData?.[section]?.section_title || section} onChange={(e) => updateSection(section, 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '1rem' }} />
 
-                 {cvData?.[section]?.items?.map((item, idx) => (
-                    <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', position: 'relative' }}>
-                       <button onClick={() => removeArrayItem(section, idx)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                       <input type="text" placeholder="Title/Degree" value={item.title || item.degree || ''} onChange={(e) => updateArrayItem(section, idx, section === 'education' ? 'degree' : 'title', e.target.value)} className="modular-input" style={{ width: 'calc(100% - 30px)', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px', marginBottom: '8px' }} />
-                       
-                       <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                         <input type="text" placeholder="Company/School" value={item.company || item.school || ''} onChange={(e) => updateArrayItem(section, idx, section === 'education' ? 'school' : 'company', e.target.value)} className="modular-input" style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px' }} />
-                         <input type="text" placeholder="Date" value={item.date || ''} onChange={(e) => updateArrayItem(section, idx, 'date', e.target.value)} className="modular-input" style={{ width: '120px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px' }} />
-                       </div>
+                     {cvData?.[section]?.items?.map((item, idx) => (
+                        <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', position: 'relative' }}>
+                           <button onClick={() => removeArrayItem(section, idx)} style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                           <input type="text" placeholder="Title/Degree" value={item.title || item.degree || ''} onChange={(e) => updateArrayItem(section, idx, section === 'education' ? 'degree' : 'title', e.target.value)} className="modular-input" style={{ width: 'calc(100% - 30px)', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px', marginBottom: '8px' }} />
+                           
+                           <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                             <input type="text" placeholder="Company/School" value={item.company || item.school || ''} onChange={(e) => updateArrayItem(section, idx, section === 'education' ? 'school' : 'company', e.target.value)} className="modular-input" style={{ flex: 1, background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px' }} />
+                             <input type="text" placeholder="Date" value={item.date || ''} onChange={(e) => updateArrayItem(section, idx, 'date', e.target.value)} className="modular-input" style={{ width: '120px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px' }} />
+                           </div>
 
-                       <textarea placeholder="Description (Optional)" value={item.description || ''} onChange={(e) => updateArrayItem(section, idx, 'description', e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px', minHeight: '60px', marginBottom: '8px' }} />
-                       
-                       <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Bullets (one per line)</div>
-                       <textarea value={(item.bullets || []).join('\n')} onChange={(e) => updateBullets(section, idx, e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#e5e7eb', padding: '8px', borderRadius: '4px', minHeight: '100px' }} />
-                    </div>
-                 ))}
+                           <textarea placeholder="Description (Optional)" value={item.description || ''} onChange={(e) => updateArrayItem(section, idx, 'description', e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '4px', minHeight: '60px', marginBottom: '8px' }} />
+                           
+                           <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Bullets (one per line)</div>
+                           <textarea value={(item.bullets || []).join('\n')} onChange={(e) => updateBullets(section, idx, e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: '#e5e7eb', padding: '8px', borderRadius: '4px', minHeight: '100px' }} />
+                        </div>
+                     ))}
+                   </div>
+                 )}
               </div>
             ))}
 
             {['skills', 'languages'].map(section => (
-              <div key={section} style={{ marginBottom: '2rem' }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
-                   <h3 style={{ fontSize: '1.2rem', textTransform: 'capitalize' }}>{section}</h3>
-                   <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', overflow: 'hidden' }}>
-                      <button onClick={() => updateSection(section, 'view_mode', 'inline')} style={{ padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer', border: 'none', background: (cvData?.[section]?.view_mode === 'inline' || !cvData?.[section]?.view_mode) ? 'rgba(59, 130, 246, 0.4)' : 'transparent', color: 'white' }}>Inline</button>
-                      <button onClick={() => updateSection(section, 'view_mode', 'list')} style={{ padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer', border: 'none', background: cvData?.[section]?.view_mode === 'list' ? 'rgba(59, 130, 246, 0.4)' : 'transparent', color: 'white' }}>List</button>
+              <div key={section} style={{ marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                 <button 
+                   onClick={() => setActiveAccordion(activeAccordion === section ? null : section)}
+                   style={{ width: '100%', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', borderBottom: activeAccordion === section ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                     <h3 style={{ fontSize: '1.1rem', margin: 0, textTransform: 'capitalize' }}>{section}</h3>
+                     <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '4px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => updateSection(section, 'view_mode', 'inline')} style={{ padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer', border: 'none', background: (cvData?.[section]?.view_mode === 'inline' || !cvData?.[section]?.view_mode) ? 'rgba(59, 130, 246, 0.6)' : 'transparent', color: 'white' }}>Inline</button>
+                        <button onClick={() => updateSection(section, 'view_mode', 'list')} style={{ padding: '2px 8px', fontSize: '0.7rem', cursor: 'pointer', border: 'none', background: cvData?.[section]?.view_mode === 'list' ? 'rgba(59, 130, 246, 0.6)' : 'transparent', color: 'white' }}>List</button>
+                     </div>
                    </div>
-                 </div>
-                 <input type="text" placeholder="Section Title" value={cvData?.[section]?.section_title || section} onChange={(e) => updateSection(section, 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '10px' }} />
-                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Items ({cvData?.[section]?.view_mode === 'list' ? 'one bullet per line' : 'one inline block per line'})</div>
-                 <textarea value={(cvData?.[section]?.items || []).join('\n')} onChange={(e) => updateSimpleArray(section, e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px', minHeight: '100px' }} />
+                   {activeAccordion === section ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                 </button>
+                 
+                 {activeAccordion === section && (
+                   <div style={{ padding: '15px' }}>
+                     <input type="text" placeholder="Section Title" value={cvData?.[section]?.section_title || section} onChange={(e) => updateSection(section, 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '10px' }} />
+                     <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Items ({cvData?.[section]?.view_mode === 'list' ? 'one bullet per line' : 'one inline block per line'})</div>
+                     <textarea value={(cvData?.[section]?.items || []).join('\n')} onChange={(e) => updateSimpleArray(section, e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px', minHeight: '100px' }} />
+                   </div>
+                 )}
               </div>
             ))}
           </div>
