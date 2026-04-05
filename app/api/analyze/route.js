@@ -37,6 +37,7 @@ Task:
    - STRICT SEMANTIC OMISSIONS: Do not create redundant labels inside generic data lists. For example, under a Languages section, just list the languages. Do not write "Languages: English".
    - LANGUAGE DETECTION: Detect the language of the Job Description natively (e.g. English, German). You MUST generate all text and section_titles exactly natively in that language (e.g., 'Berufserfahrung' instead of 'Experience').
    - Replace weak verbs with strong active verbs. Merge redundant bullet points logically.
+   - NO HARD LINE BREAKS: Within atomic values (like email, phone, location), NEVER insert newlines (\n) or HTML breaks. Keep strings perfectly inline.
 
 3. Calculate the new projected ATS match score (0-100) after optimization.
 4. List 3 to 5 specific improvements.
@@ -51,12 +52,12 @@ Return a JSON object matching exactly this schema. Your output must ONLY be the 
   "missing_info": [String, ...],
   "cover_letter": "...",
   "optimized_cv_modular": {
-    "personal_info": { "name": "", "contact_details": "..." },
+    "personal_info": { "name": "", "email": "", "phone": "", "location": "", "linkedin": "" },
     "summary": { "section_title": "Professional Summary", "content": "..." },
     "experience": { "section_title": "Experience", "items": [ { "title": "", "company": "", "date": "", "bullets": ["..."] } ] },
     "education": { "section_title": "Education", "items": [ { "degree": "", "school": "", "date": "", "bullets": ["..."] } ] },
-    "skills": { "section_title": "Skills", "items": ["..."] },
-    "languages": { "section_title": "Languages", "items": ["..."] },
+    "skills": { "section_title": "Skills", "view_mode": "inline", "items": ["..."] },
+    "languages": { "section_title": "Languages", "view_mode": "inline", "items": ["..."] },
     "custom_projects": { "section_title": "Projects", "items": [ { "title": "", "description": "", "date": "", "bullets": ["..."] } ] }
   }
 }

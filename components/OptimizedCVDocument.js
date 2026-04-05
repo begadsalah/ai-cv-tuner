@@ -108,10 +108,27 @@ const OptimizedCVDocument = ({ cvData, settings = {} }) => {
     if (!cvData) return null;
     const components = [];
 
-    // Personal Info (Implicit H1 and subtitle block)
+    // Personal Info Stack Override (Horizontal nowrap protection)
     if (cvData.personal_info) {
       if (cvData.personal_info.name) components.push(<Text key="name" style={styles.h1}>{cvData.personal_info.name}</Text>);
-      if (cvData.personal_info.contact_details) components.push(<Text key="contact" style={styles.p}>{cvData.personal_info.contact_details}</Text>);
+      
+      const contactItems = [];
+      if (cvData.personal_info.email) contactItems.push(cvData.personal_info.email);
+      if (cvData.personal_info.phone) contactItems.push(cvData.personal_info.phone);
+      if (cvData.personal_info.location) contactItems.push(cvData.personal_info.location);
+      if (cvData.personal_info.linkedin) contactItems.push(cvData.personal_info.linkedin);
+
+      if (contactItems.length > 0) {
+        components.push(
+          <View key="contact" style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: sectionSpacing * 0.5 }}>
+            {contactItems.map((item, idx) => (
+               <Text key={`ci-${idx}`} style={{ fontSize: fontSize, color: '#333333', marginRight: 8 }}>
+                 {item}{idx < contactItems.length - 1 ? ' |' : ''}
+               </Text>
+            ))}
+          </View>
+        );
+      }
     }
 
     // Generic Section Renderer
@@ -124,13 +141,26 @@ const OptimizedCVDocument = ({ cvData, settings = {} }) => {
         components.push(<Text key={`p-${key}`} style={styles.p}>{dataBlock.content}</Text>);
       }
 
+      const isInline = dataBlock.view_mode !== 'list';
+
       if (dataBlock.items && Array.isArray(dataBlock.items)) {
-        dataBlock.items.forEach((item, index) => {
-          if (typeof item === 'string') {
-             // Simple array (Skills, Languages)
-             components.push(<Text key={`item-${key}-${index}`} style={styles.p}>{item}</Text>);
+        if (typeof dataBlock.items[0] === 'string') {
+          // Arrays like Skills / Languages
+          if (isInline) {
+             const joinedString = dataBlock.items.join(' • ');
+             components.push(<Text key={`item-${key}-inline`} style={styles.p}>{joinedString}</Text>);
           } else {
-             // Complex block (Experience, Education, Custom Projects)
+             components.push(
+               <View key={`list-${key}`} style={{ marginBottom: sectionSpacing * 0.8 }} wrap={true}>
+                 {dataBlock.items.map((b, idx) => (
+                   <BulletPoint key={`li-${key}-${idx}`}>{b}</BulletPoint>
+                 ))}
+               </View>
+             );
+          }
+        } else {
+          // Complex block (Experience, Education, Custom Projects)
+          dataBlock.items.forEach((item, index) => {
              if (item.title) components.push(<Text key={`h3-${key}-${index}`} style={styles.h3}>{item.title}</Text>);
              
              let subtext = [];
@@ -153,8 +183,8 @@ const OptimizedCVDocument = ({ cvData, settings = {} }) => {
                  </View>
                );
              }
-          }
-        });
+          });
+        }
       }
     };
 

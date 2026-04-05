@@ -173,9 +173,12 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
           <div style={{ display: activeTab === 'editor' ? 'flex' : 'none', flexDirection: 'column', height: '100%', overflowY: 'auto', padding: '20px' }}>
             
             <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Personal Info</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '2rem' }}>
-              <input type="text" placeholder="Name" value={cvData?.personal_info?.name || ''} onChange={(e) => updatePersonalInfo('name', e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
-              <input type="text" placeholder="Contact Details (e.g., Email | Phone | Location)" value={cvData?.personal_info?.contact_details || ''} onChange={(e) => updatePersonalInfo('contact_details', e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '2rem' }}>
+              <input type="text" placeholder="Name" value={cvData?.personal_info?.name || ''} onChange={(e) => updatePersonalInfo('name', e.target.value)} className="modular-input" style={{ gridColumn: '1 / -1', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+              <input type="email" placeholder="Email" value={cvData?.personal_info?.email || ''} onChange={(e) => updatePersonalInfo('email', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+              <input type="tel" placeholder="Phone" value={cvData?.personal_info?.phone || ''} onChange={(e) => updatePersonalInfo('phone', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+              <input type="text" placeholder="Location" value={cvData?.personal_info?.location || ''} onChange={(e) => updatePersonalInfo('location', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
+              <input type="url" placeholder="LinkedIn / Portfolio" value={cvData?.personal_info?.linkedin || ''} onChange={(e) => updatePersonalInfo('linkedin', e.target.value)} className="modular-input" style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px' }} />
             </div>
 
             <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Summary</h3>
@@ -212,9 +215,15 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
 
             {['skills', 'languages'].map(section => (
               <div key={section} style={{ marginBottom: '2rem' }}>
-                 <h3 style={{ fontSize: '1.2rem', textTransform: 'capitalize', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>{section}</h3>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+                   <h3 style={{ fontSize: '1.2rem', textTransform: 'capitalize' }}>{section}</h3>
+                   <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '6px', overflow: 'hidden' }}>
+                      <button onClick={() => updateSection(section, 'view_mode', 'inline')} style={{ padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer', border: 'none', background: (cvData?.[section]?.view_mode === 'inline' || !cvData?.[section]?.view_mode) ? 'rgba(59, 130, 246, 0.4)' : 'transparent', color: 'white' }}>Inline</button>
+                      <button onClick={() => updateSection(section, 'view_mode', 'list')} style={{ padding: '4px 10px', fontSize: '0.75rem', cursor: 'pointer', border: 'none', background: cvData?.[section]?.view_mode === 'list' ? 'rgba(59, 130, 246, 0.4)' : 'transparent', color: 'white' }}>List</button>
+                   </div>
+                 </div>
                  <input type="text" placeholder="Section Title" value={cvData?.[section]?.section_title || section} onChange={(e) => updateSection(section, 'section_title', e.target.value)} className="modular-input" style={{ width: '100%', background: 'transparent', border: '1px dashed rgba(255,255,255,0.2)', color: '#93c5fd', padding: '5px', borderRadius: '4px', marginBottom: '10px' }} />
-                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Items (one per line, e.g. "Languages: English, German")</div>
+                 <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}>Items ({cvData?.[section]?.view_mode === 'list' ? 'one bullet per line' : 'one inline block per line'})</div>
                  <textarea value={(cvData?.[section]?.items || []).join('\n')} onChange={(e) => updateSimpleArray(section, e.target.value)} className="modular-input" style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '10px', borderRadius: '6px', minHeight: '100px' }} />
               </div>
             ))}

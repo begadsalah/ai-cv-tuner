@@ -167,13 +167,8 @@ export default function UploadCV({ onTextExtracted }) {
         </h3>
         
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: 1.5 }}>
-          Your CV contains hyperlinked text pointing to an external domain. Would you like to explicitly include this URL so the AI can analyze your portfolio/LinkedIn?
+          We found a link attached to the text: <span style={{ color: 'white', fontWeight: 600, fontStyle: 'italic', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>"{currentLink.anchor || 'Unknown Text'}"</span>. Do you want to include or edit this URL?
         </p>
-
-        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '8px', borderLeft: '4px solid #60a5fa', marginBottom: '1rem' }}>
-           <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginBottom: '4px' }}>Extracted Context:</p>
-           <p style={{ fontStyle: 'italic', fontWeight: 600 }}>"{currentLink.anchor || 'Unknown Mapping'}"</p>
-        </div>
 
         <input
           type="text"
