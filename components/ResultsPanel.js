@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { PDFViewer } from '@react-pdf/renderer';
 import { AlertCircle, Download, FileText, Edit3, ArrowRight, SkipForward } from 'lucide-react';
 import ScoreComparison from './ScoreComparison';
 import CVPreview from './CVPreview';
