@@ -3,10 +3,10 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { htmlContent } = body;
+    const { cvData } = body;
 
-    if (!htmlContent) {
-      return NextResponse.json({ error: 'Missing htmlContent' }, { status: 400 });
+    if (!cvData) {
+      return NextResponse.json({ error: 'Missing cvData block' }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -15,24 +15,23 @@ export async function POST(req) {
     }
 
     const prompt = `
-You are an expert ATS optimization engine. The user needs to shrink their CV to fit perfectly onto 1 page, but they cannot afford to lose ANY crucial ATS search keywords.
+You are an expert ATS optimization engine. The user needs to shrink their CV to fit perfectly onto exactly 1 A4 page, but they cannot afford to lose ANY crucial ATS search keywords or structural identity.
 
-Here is the current CV in basic HTML format:
+Here is the current CV structurally defined in JSON:
 ---
-${htmlContent}
+${JSON.stringify(cvData, null, 2)}
 ---
 
 Task:
-Strictly compress the vertical footprint of this CV text while preserving 100% of the technical skills, job titles, companies, and numeric metrics.
+Strictly compress the vertical footprint of this CV text using Semantic Compression while returning the EXACT same JSON object schema.
 
-Compression Strategies:
-1. Merge redundant bullet points: Combine short, closely related analytical bullets into a single, powerful sentence.
-2. Fix bullet fragmentation: Detect label-value chains (e.g., a bullet saying "Arabic" followed by a bullet saying "Native") and merge them inline ("Arabic - Native").
-3. Inline lists: Where appropriate (like in Skills or Languages sections), convert vertical bullet lists into inline comma-separated lists to save massive vertical space (e.g. "Languages: Arabic (Native), English (C1)").
-4. Remove "fluff": Remove weak filler words, but NEVER remove hard ATS keywords.
+Constraint Protocol for "Semantic Compression":
+1. Merge fragmented bullets into single, highly-dense action sentences. Replace long phrases with short, powerful action verbs.
+2. Cut "fluff" but NEVER remove hard technical ATS keywords, Job Titles, Companies, numeric metrics, or dates.
+3. For the Skills section, enforce a strict "Category: Technology1, Technology2" format (e.g. "Tracking: GA4, GTM").
+4. ZERO DATA LOSS ON CONTACTS: NEVER delete or truncate Location (e.g., Mannheim) or Contact Details (emails, phones). These are hard requirements.
 
-Output exactly the same underlying HTML structure (<h1>, <h2>, <h3>, <ul>, <li>, <p>) but with the rewritten, highly-compacted text.
-DO NOT wrap your response in markdown code blocks like \`\`\`html. Output raw HTML explicitly.
+Output ONLY the raw JSON object mimicking the input schema. DO NOT wrap your response in markdown code blocks like \`\`\`json. Output pure JSON format explicitly.
 `;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
@@ -41,7 +40,8 @@ DO NOT wrap your response in markdown code blocks like \`\`\`html. Output raw HT
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          temperature: 0.1
+          temperature: 0.1,
+          responseMimeType: 'application/json'
         }
       })
     });
@@ -55,10 +55,12 @@ DO NOT wrap your response in markdown code blocks like \`\`\`html. Output raw HT
 
     let textOutput = data.candidates[0].content.parts[0].text;
     
-    // Clean up any potential markdown wrapper returned by mistake
-    textOutput = textOutput.replace(/^```html\s*/i, '').replace(/```$/i, '').trim();
+    // Clean up markdown
+    textOutput = textOutput.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
 
-    return NextResponse.json({ compressed_html: textOutput });
+    const compressedJson = JSON.parse(textOutput);
+
+    return NextResponse.json({ compressed_cv_modular: compressedJson });
     
   } catch (error) {
     console.error('API Error:', error);

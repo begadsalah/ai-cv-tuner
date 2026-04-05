@@ -278,6 +278,43 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
           {/* LAYOUT TAB */}
           <div style={{ display: activeTab === 'layout' ? 'block' : 'none', padding: '20px', overflowY: 'auto', height: '100%' }}>
             
+            <div style={{ marginBottom: '2rem', padding: '15px', background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)', borderRadius: '8px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', color: '#22d3ee' }}>
+                <Sparkles size={18} /> AI-Powered 1-Page Force
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: '15px', lineHeight: 1.4 }}>
+                If your CV is spilling over one page, the AI will perform a semantic rewriting compression, aggressively merging fragment bullets and optimizing your CSS scale down to 1-Page max.
+              </p>
+              <button 
+                onClick={async () => {
+                  alert('Initiating Semantic Compression! The AI is currently rewriting your copy. This will take ~10 seconds.');
+                  setIsCompressing(true);
+                  try {
+                    const res = await fetch('/api/compress', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ cvData })
+                    });
+                    const payload = await res.json();
+                    if (payload.compressed_cv_modular) {
+                      setCvData(payload.compressed_cv_modular);
+                      setSettings(prev => ({ ...prev, lineSpacing: 1.1, sectionSpacing: 8 }));
+                    } else {
+                      alert('Compression API completely failed.');
+                    }
+                  } catch (e) {
+                     alert(e.message);
+                  } finally {
+                    setIsCompressing(false);
+                  }
+                }}
+                disabled={isCompressing}
+                style={{ width: '100%', padding: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: '#0e7490', border: '1px solid #22d3ee', color: 'white', borderRadius: '6px', fontWeight: 600, cursor: isCompressing ? 'wait' : 'pointer' }}
+              >
+                {isCompressing ? 'Compressing Layout...' : 'Optimize for 1-Page (AI-Driven)'}
+              </button>
+            </div>
+
             <h4 style={{ marginBottom: '1.25rem', opacity: 0.8, fontSize: '0.85rem' }}>Global Typography</h4>
             <div style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '0.5rem', opacity: 0.7 }}>

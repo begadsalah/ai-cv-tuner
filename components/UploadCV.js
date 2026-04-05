@@ -1,10 +1,70 @@
 'use client';
-import { useState, useRef } from 'react';
-import { UploadCloud, FileText, CheckCircle, Link as LinkIcon, ArrowRight, SkipForward } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { UploadCloud, FileText, CheckCircle, Link as LinkIcon, ArrowRight, SkipForward, Edit, Trash2 } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// We must set the worker source. Pointing to unpkg or cdnjs matches the version
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+// Sub-component to render PDF page and overlay highlights
+const PDFCanvasPreview = ({ pdf, pageNumber, highlightRect }) => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    let renderTask = null;
+    let isMounted = true;
+
+    const render = async () => {
+      if (!pdf || !canvasRef.current) return;
+      try {
+        const page = await pdf.getPage(pageNumber);
+        const parentWidth = canvasRef.current.parentElement.clientWidth || 400;
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const scale = parentWidth / unscaledViewport.width;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = canvasRef.current;
+        const context = canvas.getContext('2d');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        renderTask = page.render({ canvasContext: context, viewport });
+        await renderTask.promise;
+
+        if (highlightRect && isMounted) {
+           const [x1, y1, x2, y2] = highlightRect;
+           // PDF coordinates mapping directly to viewport
+           const [rx1, ry1, rx2, ry2] = viewport.convertToViewportRectangle([x1, y1, x2, y2]);
+           const startX = Math.min(rx1, rx2);
+           const startY = Math.min(ry1, ry2);
+           const width = Math.abs(rx2 - rx1);
+           const height = Math.abs(ry2 - ry1);
+
+           context.fillStyle = 'rgba(234, 179, 8, 0.5)'; // Yellow overlay
+           context.fillRect(startX - 4, startY - 4, width + 8, height + 8);
+        }
+      } catch (err) {
+        if (err.name !== 'RenderingCancelledException') {
+          console.error('Canvas render error:', err);
+        }
+      }
+    };
+
+    render();
+
+    return () => {
+      isMounted = false;
+      if (renderTask) {
+        renderTask.cancel();
+      }
+    };
+  }, [pdf, pageNumber, highlightRect]);
+
+  return (
+    <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto' }}>
+      <canvas ref={canvasRef} style={{ maxWidth: '100%', height: 'intrinsic', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px' }} />
+    </div>
+  );
+};
 
 export default function UploadCV({ onTextExtracted }) {
   const [isHovering, setIsHovering] = useState(false);
@@ -13,9 +73,12 @@ export default function UploadCV({ onTextExtracted }) {
   
   // Link Wizard States
   const [detectedLinks, setDetectedLinks] = useState([]);
-  const [currentLinkIndex, setCurrentLinkIndex] = useState(0);
   const [baseExtractedText, setBaseExtractedText] = useState('');
   const [approvedUrls, setApprovedUrls] = useState([]);
+  const [activeLinkRef, setActiveLinkRef] = useState(null); // ID or URL of currently clicked link
+
+  // Memory buffer for loaded PDF validation
+  const [loadedPdf, setLoadedPdf] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -34,6 +97,8 @@ export default function UploadCV({ onTextExtracted }) {
       fileReader.onload = async function() {
         const typedarray = new Uint8Array(this.result);
         const pdf = await pdfjsLib.getDocument(typedarray).promise;
+        setLoadedPdf(pdf); // Store for Live Visualizer
+
         let fullText = '';
         let extractedLinks = [];
         
@@ -45,7 +110,6 @@ export default function UploadCV({ onTextExtracted }) {
           let pageText = '';
           
           textContent.items.forEach(item => {
-             // If Y coordinate drops significantly, it's a new line
              if (lastY !== -1 && Math.abs(lastY - item.transform[5]) > 4) {
                  pageText += '\n';
              }
@@ -55,7 +119,6 @@ export default function UploadCV({ onTextExtracted }) {
           
           fullText += pageText + '\n\n';
 
-          // Extract link annotations
           const annotations = await page.getAnnotations();
           annotations.forEach(a => {
             if (a.subtype === 'Link' && a.url) {
@@ -63,7 +126,6 @@ export default function UploadCV({ onTextExtracted }) {
                  let anchorTextContext = '';
                  if (a.rect) {
                    const [x1, y1, x2, y2] = a.rect;
-                   // Heuristic overlap mapping
                    const overlappingItems = textContent.items.filter(item => {
                        const itemX = item.transform[4];
                        const itemY = item.transform[5];
@@ -71,18 +133,26 @@ export default function UploadCV({ onTextExtracted }) {
                    });
                    anchorTextContext = overlappingItems.map(i => i.str).join(' ').trim();
                  }
-                extractedLinks.push({ url: a.url, page: i, anchor: anchorTextContext || '[Hidden Document Mapping]' });
+                 
+                 // If mapping fails, gracefully just print the URL
+                 extractedLinks.push({ 
+                    id: Math.random().toString(),
+                    url: a.url, 
+                    page: i, 
+                    rect: a.rect,
+                    anchor: anchorTextContext || a.url 
+                 });
               }
             }
           });
         }
 
-        // Sanitization: Normalize spaces and fix condensed "skill arrays"
         fullText = fullText.replace(/\s{3,}/g, '\n').replace(/([a-z])([A-Z])/g, '$1 $2');
 
         if (fullText.trim().length < 50) {
           setFileName('');
           setIsExtracting(false);
+          setLoadedPdf(null);
           alert('Could not extract readable text from this PDF. Please upload raw text PDF instead of images.');
           return;
         }
@@ -90,12 +160,12 @@ export default function UploadCV({ onTextExtracted }) {
         if (extractedLinks.length > 0) {
           setBaseExtractedText(fullText);
           setDetectedLinks(extractedLinks);
+          setActiveLinkRef(extractedLinks[0].id);
           setIsExtracting(false); 
-          // Link Wizard takes over!
         } else {
-          // No links found, just finish extraction
           onTextExtracted(fullText);
           setIsExtracting(false);
+          setLoadedPdf(null);
         }
       };
 
@@ -108,36 +178,40 @@ export default function UploadCV({ onTextExtracted }) {
     }
   };
 
-  const finalizeTextExtraction = (approved) => {
+  const finalizeValidation = () => {
     let finalPayload = baseExtractedText;
-    if (approved.length > 0) {
+    if (approvedUrls.length > 0) {
       finalPayload += '\n\n=== Embedded URLs ===\n';
-      approved.forEach(url => {
-        finalPayload += `${url}\n`;
+      approvedUrls.forEach(urlObj => {
+        finalPayload += `${urlObj.url}\n`;
       });
     }
-    // Cleanup states and push forward
+    
+    // Cleanup and trigger Gemini
     setDetectedLinks([]);
-    setCurrentLinkIndex(0);
     setApprovedUrls([]);
+    setLoadedPdf(null);
     onTextExtracted(finalPayload);
   };
 
-  const handleLinkDecision = (isInclude) => {
-    const activeLink = detectedLinks[currentLinkIndex];
-    const newApproved = [...approvedUrls];
-    
-    if (isInclude) {
-      newApproved.push(activeLink.url);
-    }
-    
-    setApprovedUrls(newApproved);
+  const removeLink = (id) => {
+     setDetectedLinks(prev => prev.filter(l => l.id !== id));
+     const remaining = detectedLinks.filter(l => l.id !== id);
+     if (remaining.length === 0) {
+       finalizeValidation();
+     } else {
+       setActiveLinkRef(remaining[0].id);
+     }
+  };
 
-    if (currentLinkIndex + 1 < detectedLinks.length) {
-      setCurrentLinkIndex(currentLinkIndex + 1);
-    } else {
-      finalizeTextExtraction(newApproved);
-    }
+  const updateLinkUrl = (id, newUrl) => {
+     setDetectedLinks(prev => prev.map(l => l.id === id ? { ...l, url: newUrl } : l));
+  };
+
+  const includeLink = (id) => {
+     const target = detectedLinks.find(l => l.id === id);
+     setApprovedUrls(prev => [...prev, target]);
+     removeLink(id); 
   };
 
   const handleDragOver = (e) => {
@@ -157,45 +231,79 @@ export default function UploadCV({ onTextExtracted }) {
     if (files.length > 0) handleFile(files[0]);
   };
 
-  // If we are iterating through detected links, show the Wizard!
-  if (detectedLinks.length > 0) {
-    const currentLink = detectedLinks[currentLinkIndex];
+  // SPLIT-SCREEN VALIDATOR VIEW
+  if (detectedLinks.length > 0 && loadedPdf) {
+    const activeLinkData = detectedLinks.find(l => l.id === activeLinkRef) || detectedLinks[0];
+
     return (
-      <div className="glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', minHeight: '280px', overflow: 'hidden' }}>
-        <h3 style={{ color: '#60a5fa', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <LinkIcon size={20} /> Hidden Link Detected
-        </h3>
+      <div style={{ display: 'flex', gap: '1.5rem', width: '100%', height: '550px' }}>
         
-        <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: 1.5 }}>
-          We found a link attached to the text: <span style={{ color: 'white', fontWeight: 600, fontStyle: 'italic', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>"{currentLink.anchor || 'Unknown Text'}"</span>. Do you want to include or edit this URL?
-        </p>
-
-        <input
-          type="text"
-          value={currentLink.url}
-          onChange={(e) => {
-             const newLinks = [...detectedLinks];
-             newLinks[currentLinkIndex].url = e.target.value;
-             setDetectedLinks(newLinks);
-          }}
-          style={{ 
-             width: '100%', background: 'rgba(0,0,0,0.5)', padding: '12px', borderRadius: '8px', 
-             border: '1px solid #60a5fa', marginBottom: '1.5rem', color: 'white', 
-             fontFamily: 'monospace', fontSize: '0.9rem' 
-          }}
-        />
-
-        <div style={{ display: 'flex', gap: '1rem', marginTop: 'auto' }}>
-          <button className="btn btn-glass" onClick={() => handleLinkDecision(false)} style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}>
-            <SkipForward size={16} /> Skip 
-          </button>
-          <button className="btn btn-primary" onClick={() => handleLinkDecision(true)} style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '8px' }}>
-            Include URL <ArrowRight size={16} />
-          </button>
+        {/* Left Side: Live Canvas Render */}
+        <div className="glass-panel" style={{ flex: '1 1 50%', overflow: 'hidden', padding: 0 }}>
+           <h3 style={{ padding: '15px 20px', margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+             <FileText size={16} /> Document Mapping (Page {activeLinkData.page})
+           </h3>
+           <div style={{ height: 'calc(100% - 50px)', overflow: 'hidden' }}>
+             <PDFCanvasPreview 
+               pdf={loadedPdf} 
+               pageNumber={activeLinkData.page} 
+               highlightRect={activeLinkData.rect} 
+             />
+           </div>
         </div>
-        
-        <div style={{ textAlign: 'center', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '1rem' }}>
-           Link {currentLinkIndex + 1} of {detectedLinks.length}
+
+        {/* Right Side: Action Board */}
+        <div className="glass-panel" style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', padding: '20px', overflow: 'hidden' }}>
+          <h3 style={{ color: '#f59e0b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <LinkIcon size={20} /> Visual Link Validator
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: 1.5 }}>
+            We detected embedded links in your PDF. Review the matched locations and explicitly approve any crucial Portfolio/LinkedIn URLs.
+          </p>
+
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '10px' }}>
+            {detectedLinks.map((link) => {
+               const isActive = link.id === activeLinkRef;
+               return (
+                 <div 
+                   key={link.id} 
+                   onClick={() => setActiveLinkRef(link.id)}
+                   style={{ 
+                     background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.3)', 
+                     border: `1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.05)'}`,
+                     borderRadius: '8px', 
+                     padding: '12px',
+                     cursor: 'pointer',
+                     transition: 'all 0.2s'
+                   }}
+                 >
+                    <p style={{ color: 'white', fontSize: '0.9rem', marginBottom: '6px', fontStyle: 'italic' }}>
+                      Context <ArrowRight size={12} style={{ display: 'inline' }} /> <span style={{ fontWeight: 600 }}>"{link.anchor}"</span>
+                    </p>
+                    <input 
+                      type="text" 
+                      value={link.url}
+                      onChange={(e) => updateLinkUrl(link.id, e.target.value)}
+                      style={{ width: '100%', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', color: '#93c5fd', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '10px' }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); removeLink(link.id); }} style={{ flex: 1, padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
+                        <Trash2 size={14} /> Remove
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); includeLink(link.id); }} style={{ flex: 1, padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: '#3b82f6', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                        <CheckCircle size={14} /> Include
+                      </button>
+                    </div>
+                 </div>
+               );
+            })}
+          </div>
+
+          <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
+             <button className="btn" onClick={finalizeValidation} style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)' }}>
+               Discard Remaining & Continue <ArrowRight size={16} />
+             </button>
+          </div>
         </div>
       </div>
     );
