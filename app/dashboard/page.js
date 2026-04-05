@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Play, AlertCircle } from 'lucide-react';
 import UploadCV from '@/components/UploadCV';
@@ -29,10 +29,11 @@ export default function Dashboard() {
     setError(null);
 
     try {
+      const preferredLanguage = localStorage.getItem('app_lang') || 'English';
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cvText, jobDescription, additionalContext: typeof contextOverride === 'string' && contextOverride ? contextOverride : additionalContext })
+        body: JSON.stringify({ cvText, jobDescription, additionalContext: typeof contextOverride === 'string' && contextOverride ? contextOverride : additionalContext, language: preferredLanguage })
       });
 
       if (!response.ok) {
@@ -42,6 +43,22 @@ export default function Dashboard() {
 
       const data = await response.json();
       setResults(data);
+
+      // Save to History Cache
+      try {
+        const currentHistory = JSON.parse(localStorage.getItem('cv_history') || '[]');
+        currentHistory.push({
+           timestamp: Date.now(),
+           data: data,
+           original_score: data.original_score,
+           optimized_score: data.optimized_score
+        });
+        // Keep ONLY last 10 optimized CVs locally
+        if (currentHistory.length > 10) currentHistory.shift();
+        localStorage.setItem('cv_history', JSON.stringify(currentHistory));
+      } catch (e) {
+        console.error('Failed to save history', e);
+      }
       
     } catch (err) {
       console.error(err);
@@ -50,6 +67,15 @@ export default function Dashboard() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleRestore = (e) => {
+      setResults(e.detail);
+      // Optional: Clear inputs since we are restoring straight to the output
+    };
+    window.addEventListener('restoreCV', handleRestore);
+    return () => window.removeEventListener('restoreCV', handleRestore);
+  }, []);
 
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

@@ -12,6 +12,13 @@ export default function LoginPage() {
 
   // HARD CACHE OVERRIDE
   useEffect(() => {
+    // Kill BFCache Ghost Screen
+    window.onpageshow = function(event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    };
+
     const enforceAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {

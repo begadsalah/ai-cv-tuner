@@ -14,6 +14,19 @@
   --radius-lg: 24px;
 }
 
+:root[data-theme="light"] {
+  --primary: #2563EB;
+  --secondary: #0284c7;
+  --bg-gradient-start: #f8fafc;
+  --bg-gradient-end: #e2e8f0;
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-hover: rgba(255, 255, 255, 0.9);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-dark: #0f172a;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

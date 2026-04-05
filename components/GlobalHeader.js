@@ -2,16 +2,30 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Wand2, Loader2, Moon, Globe, History, Settings, LogOut, User as UserIcon } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import ProfileSettingsModal from './ProfileSettingsModal';
+import HistoryModal from './HistoryModal';
 import { useRouter } from 'next/navigation';
 
 export default function GlobalHeader() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [theme, setTheme] = useState('dark');
+  const [lang, setLang] = useState('English');
   const dropdownRef = useRef(null);
   const supabase = createClient();
   const router = useRouter();
+
+  // On mount, apply theme if previously set
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('app_theme') || 'dark';
+    const savedLang = localStorage.getItem('app_lang') || 'English';
+    setTheme(savedTheme);
+    setLang(savedLang);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -45,7 +59,30 @@ export default function GlobalHeader() {
     router.push('/login');
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('app_theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    setIsMenuOpen(false);
+  };
+
+  const toggleLang = () => {
+    const newLang = lang === 'English' ? 'German' : 'English';
+    setLang(newLang);
+    localStorage.setItem('app_lang', newLang);
+    setIsMenuOpen(false);
+  };
+
+  const handleRestoreHistory = (data) => {
+    window.dispatchEvent(new CustomEvent('restoreCV', { detail: data }));
+    if (window.location.pathname !== '/dashboard') {
+      router.push('/dashboard');
+    }
+  };
+
   return (
+    <>
     <header style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', borderBottom: '1px solid rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 100 }}>
       <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={{ fontWeight: 'bold', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -58,7 +95,7 @@ export default function GlobalHeader() {
       
       <nav style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {loading ? (
-           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94a3b8', fontSize: '0.9rem' }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
               <Loader2 className="spinner-icon" size={16} /> Authenticating...
            </div>
         ) : user ? (
@@ -67,7 +104,7 @@ export default function GlobalHeader() {
             {/* Clickable Profile Badge */}
             <div 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isMenuOpen ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '30px', border: `1px solid ${isMenuOpen ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', transition: 'all 0.2s', userSelect: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isMenuOpen ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '30px', border: `1px solid ${isMenuOpen ? 'var(--primary)' : 'var(--glass-border)'}`, cursor: 'pointer', transition: 'all 0.2s', userSelect: 'none' }}
             >
                {user.user_metadata?.avatar_url ? (
                  <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
@@ -77,7 +114,7 @@ export default function GlobalHeader() {
                  </div>
                )}
                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                 <span style={{ color: 'white', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.2 }}>
+                 <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.2 }}>
                    {user.user_metadata?.full_name?.split(' ')[0] || 'Pro User'}
                  </span>
                </div>
@@ -88,31 +125,31 @@ export default function GlobalHeader() {
               <div className="glass-panel animate-fade-in" style={{ position: 'absolute', top: 'calc(100% + 12px)', right: 0, width: '260px', padding: '0', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)' }}>
                 
                 {/* User Header Block */}
-                <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}>
-                  <span style={{ display: 'block', color: 'white', fontWeight: 600, fontSize: '0.95rem' }}>{user.user_metadata?.full_name || 'Pro User'}</span>
-                  <span style={{ display: 'block', color: '#94a3b8', fontSize: '0.8rem', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</span>
+                <div style={{ padding: '16px', borderBottom: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.2)' }}>
+                  <span style={{ display: 'block', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem' }}>{user.user_metadata?.full_name || 'Pro User'}</span>
+                  <span style={{ display: 'block', color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.email}</span>
                 </div>
 
                 {/* Utility List */}
                 <div style={{ display: 'flex', flexDirection: 'column', padding: '8px' }}>
                   
-                  <button onClick={() => alert('Theme module staged for future update.')} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <Moon size={16} color="#94a3b8" /> <span style={{ fontSize: '0.9rem' }}>Dark Mode</span>
+                  <button onClick={toggleTheme} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <Moon size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
                   
-                  <button onClick={() => alert('Localization staged for future update.')} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <Globe size={16} color="#94a3b8" /> <span style={{ fontSize: '0.9rem' }}>Language: English</span>
+                  <button onClick={toggleLang} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <Globe size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>Language: {lang}</span>
                   </button>
 
-                  <button onClick={() => alert('CV History API staged for future update.')} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <History size={16} color="#94a3b8" /> <span style={{ fontSize: '0.9rem' }}>Optimization History</span>
+                  <button onClick={() => { setIsMenuOpen(false); setShowHistoryModal(true); }} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <History size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>Optimization History</span>
                   </button>
 
-                  <button onClick={() => alert('Profile Management staged for future update.')} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#cbd5e1', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <Settings size={16} color="#94a3b8" /> <span style={{ fontSize: '0.9rem' }}>Account Settings</span>
+                  <button onClick={() => { setIsMenuOpen(false); setShowSettingsModal(true); }} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <Settings size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>Account Settings</span>
                   </button>
 
-                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }}></div>
+                  <div style={{ height: '1px', background: 'var(--glass-border)', margin: '4px 0' }}></div>
 
                   <button onClick={handleSignOut} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', cursor: 'pointer', textAlign: 'left', borderRadius: '6px', fontWeight: 500 }} onMouseOver={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
                     <LogOut size={16} /> <span style={{ fontSize: '0.9rem' }}>Sign Out</span>
@@ -131,5 +168,8 @@ export default function GlobalHeader() {
         )}
       </nav>
     </header>
+    {showSettingsModal && <ProfileSettingsModal user={user} onClose={() => setShowSettingsModal(false)} />}
+    {showHistoryModal && <HistoryModal onClose={() => setShowHistoryModal(false)} onRestore={handleRestoreHistory} />}
+    </>
   );
 }
