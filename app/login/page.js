@@ -1,16 +1,32 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, ChevronRight, Check } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [initChecking, setInitChecking] = useState(true);
   const supabase = createClient();
+  const router = useRouter();
+
+  // HARD CACHE OVERRIDE
+  useEffect(() => {
+    const enforceAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        router.replace('/dashboard');
+      } else {
+        setInitChecking(false);
+      }
+    };
+    enforceAuth();
+  }, [supabase, router]);
 
   const handleGoogleLogin = async () => {
     setIsAuthenticating(true);
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/api/auth/callback`,
@@ -24,24 +40,32 @@ export default function LoginPage() {
     }
   };
 
+  if (initChecking) {
+    return (
+      <div style={{ height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'var(--background)' }}>
+         <div className="spinner" style={{ width: '40px', height: '40px', borderColor: 'rgba(255,255,255,0.2)', borderTopColor: 'var(--primary)', borderWidth: '3px' }}></div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--background)' }}>
       {/* Left Branding Side */}
       <div style={{ flex: 1, padding: '4rem', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, rgba(8,15,37,0.9) 0%, rgba(15,23,42,1) 100%)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
         <h1 style={{ color: 'white', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.5rem', marginBottom: 'auto' }}>
-           <Sparkles size={24} color="var(--primary)" /> PremiumCV SaaS
+           <Sparkles size={24} color="var(--primary)" /> AI CV Optimizer
         </h1>
         <div style={{ color: 'white' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: 700, lineHeight: 1.1, marginBottom: '1.5rem', background: 'linear-gradient(to right, #60a5fa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-             Accelerate your career with AI inside our Pro Workspace.
+          <h2 style={{ fontSize: '2.5rem', fontWeight: 700, lineHeight: 1.2, marginBottom: '1.5rem', background: 'linear-gradient(to right, #60a5fa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+             Land interviews faster with an ATS-perfect resume.
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '400px', lineHeight: 1.6, marginBottom: '2rem' }}>
-             Join thousands of professionals securing high-tier interviews using our ATS optimization engine.
+          <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '450px', lineHeight: 1.6, marginBottom: '2rem' }}>
+             Join thousands of professionals securing high-tier interviews. Upload your current CV and let our AI automatically reformat, tighten, and optimize it.
           </p>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '1rem', color: '#cbd5e1' }}>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={18} color="#10b981" /> 1-Page Semantic AI Shrinking</li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={18} color="#10b981" /> Custom Link Vector Validation</li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={18} color="#10b981" /> Idempotent JSON Editor Framework</li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={18} color="#10b981" /> 1-Click ATS Formatting & Styling</li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={18} color="#10b981" /> Smart 1-Page Content Shrinking</li>
+            <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={18} color="#10b981" /> Professional Visual Link Checking</li>
           </ul>
         </div>
       </div>
@@ -49,8 +73,8 @@ export default function LoginPage() {
       {/* Right Login Side */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '3rem', textAlign: 'center' }}>
-          <h3 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Welcome Back</h3>
-          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '2rem' }}>Sign in to access your CV dashboard.</p>
+          <h3 style={{ color: 'white', fontSize: '1.5rem', marginBottom: '0.5rem' }}>Access Workspace</h3>
+          <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '2rem' }}>Sign in directly through your Google account below.</p>
           
           <button 
             onClick={handleGoogleLogin}
