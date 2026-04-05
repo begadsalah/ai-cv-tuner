@@ -236,74 +236,77 @@ export default function UploadCV({ onTextExtracted }) {
     const activeLinkData = detectedLinks.find(l => l.id === activeLinkRef) || detectedLinks[0];
 
     return (
-      <div style={{ display: 'flex', gap: '1.5rem', width: '100%', height: '550px' }}>
-        
-        {/* Left Side: Live Canvas Render */}
-        <div className="glass-panel" style={{ flex: '1 1 50%', overflow: 'hidden', padding: 0 }}>
-           <h3 style={{ padding: '15px 20px', margin: 0, fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-             <FileText size={16} /> Document Mapping (Page {activeLinkData.page})
-           </h3>
-           <div style={{ height: 'calc(100% - 50px)', overflow: 'hidden' }}>
-             <PDFCanvasPreview 
-               pdf={loadedPdf} 
-               pageNumber={activeLinkData.page} 
-               highlightRect={activeLinkData.rect} 
-             />
-           </div>
-        </div>
+      <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(15, 23, 42, 0.98)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div style={{ display: 'flex', gap: '0', width: '100%', maxWidth: '1400px', height: '90vh', background: '#0f172a', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+          
+          {/* Left Side: Action Board */}
+          <div className="glass-panel" style={{ flex: '0 0 450px', display: 'flex', flexDirection: 'column', padding: '30px', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px 0 0 12px', border: 'none' }}>
+            <h3 style={{ color: '#f59e0b', fontSize: '1.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <LinkIcon size={24} /> Visual Link Validator
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', fontSize: '1rem', lineHeight: 1.5 }}>
+              We detected embedded links in your PDF. Review the matched locations and explicitly approve any crucial Portfolio/LinkedIn URLs.
+            </p>
 
-        {/* Right Side: Action Board */}
-        <div className="glass-panel" style={{ flex: '1 1 50%', display: 'flex', flexDirection: 'column', padding: '20px', overflow: 'hidden' }}>
-          <h3 style={{ color: '#f59e0b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <LinkIcon size={20} /> Visual Link Validator
-          </h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: 1.5 }}>
-            We detected embedded links in your PDF. Review the matched locations and explicitly approve any crucial Portfolio/LinkedIn URLs.
-          </p>
+            <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '10px' }}>
+              {detectedLinks.map((link) => {
+                 const isActive = link.id === activeLinkRef;
+                 return (
+                   <div 
+                     key={link.id} 
+                     onClick={() => setActiveLinkRef(link.id)}
+                     style={{ 
+                       background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.3)', 
+                       border: `1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.05)'}`,
+                       borderRadius: '10px', 
+                       padding: '16px',
+                       cursor: 'pointer',
+                       transition: 'all 0.2s'
+                     }}
+                   >
+                      <p style={{ color: 'white', fontSize: '1rem', marginBottom: '10px', fontStyle: 'italic' }}>
+                        Context <ArrowRight size={14} style={{ display: 'inline', margin: '0 4px' }} /> <span style={{ fontWeight: 600 }}>"{link.anchor}"</span>
+                      </p>
+                      <input 
+                        type="text" 
+                        value={link.url}
+                        onChange={(e) => updateLinkUrl(link.id, e.target.value)}
+                        style={{ width: '100%', background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', color: '#93c5fd', fontSize: '0.9rem', fontFamily: 'monospace', marginBottom: '12px' }}
+                      />
+                      <div style={{ display: 'flex', gap: '10px' }}>
+                        <button onClick={(e) => { e.stopPropagation(); removeLink(link.id); }} style={{ flex: 1, padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>
+                          <Trash2 size={16} /> Remove
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); includeLink(link.id); }} style={{ flex: 1, padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#3b82f6', border: 'none', color: 'white', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 600 }}>
+                          <CheckCircle size={16} /> Include
+                        </button>
+                      </div>
+                   </div>
+                 );
+              })}
+            </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', paddingRight: '10px' }}>
-            {detectedLinks.map((link) => {
-               const isActive = link.id === activeLinkRef;
-               return (
-                 <div 
-                   key={link.id} 
-                   onClick={() => setActiveLinkRef(link.id)}
-                   style={{ 
-                     background: isActive ? 'rgba(59, 130, 246, 0.15)' : 'rgba(0,0,0,0.3)', 
-                     border: `1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.05)'}`,
-                     borderRadius: '8px', 
-                     padding: '12px',
-                     cursor: 'pointer',
-                     transition: 'all 0.2s'
-                   }}
-                 >
-                    <p style={{ color: 'white', fontSize: '0.9rem', marginBottom: '6px', fontStyle: 'italic' }}>
-                      Context <ArrowRight size={12} style={{ display: 'inline' }} /> <span style={{ fontWeight: 600 }}>"{link.anchor}"</span>
-                    </p>
-                    <input 
-                      type="text" 
-                      value={link.url}
-                      onChange={(e) => updateLinkUrl(link.id, e.target.value)}
-                      style={{ width: '100%', background: 'rgba(0,0,0,0.5)', padding: '8px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)', color: '#93c5fd', fontSize: '0.8rem', fontFamily: 'monospace', marginBottom: '10px' }}
-                    />
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={(e) => { e.stopPropagation(); removeLink(link.id); }} style={{ flex: 1, padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: 'transparent', border: '1px solid rgba(239, 68, 68, 0.4)', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
-                        <Trash2 size={14} /> Remove
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); includeLink(link.id); }} style={{ flex: 1, padding: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: '#3b82f6', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                        <CheckCircle size={14} /> Include
-                      </button>
-                    </div>
-                 </div>
-               );
-            })}
+            <div style={{ marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+               <button className="btn" onClick={finalizeValidation} style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', padding: '12px', background: 'rgba(255,255,255,0.1)' }}>
+                 Discard Remaining & Continue <ArrowRight size={18} />
+               </button>
+            </div>
           </div>
 
-          <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem' }}>
-             <button className="btn" onClick={finalizeValidation} style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.1)' }}>
-               Discard Remaining & Continue <ArrowRight size={16} />
-             </button>
+          {/* Right Side: Live Canvas Render */}
+          <div style={{ flex: '1 1 auto', overflow: 'hidden', padding: 0, background: '#cbd5e1', display: 'flex', flexDirection: 'column' }}>
+             <h3 style={{ padding: '15px 25px', margin: 0, fontSize: '1rem', color: '#1e293b', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+               <FileText size={18} /> Document Mapping (Page {activeLinkData.page})
+             </h3>
+             <div style={{ flex: 1, overflow: 'hidden', padding: '20px', display: 'flex', justifyContent: 'center' }}>
+               <PDFCanvasPreview 
+                 pdf={loadedPdf} 
+                 pageNumber={activeLinkData.page} 
+                 highlightRect={activeLinkData.rect} 
+               />
+             </div>
           </div>
+
         </div>
       </div>
     );
