@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Wand2, Loader2, Moon, Globe, History, Settings, LogOut, User as UserIcon } from 'lucide-react';
 import ProfileSettingsModal from './ProfileSettingsModal';
 import HistoryModal from './HistoryModal';
+import LanguageModal from './LanguageModal';
 import { useRouter } from 'next/navigation';
 
 export default function GlobalHeader() {
@@ -13,6 +14,7 @@ export default function GlobalHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showLangModal, setShowLangModal] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [lang, setLang] = useState('English');
   const dropdownRef = useRef(null);
@@ -68,12 +70,9 @@ export default function GlobalHeader() {
     setIsMenuOpen(false);
   };
 
-  const toggleLang = () => {
-    const langs = ['English', 'German', 'Spanish', 'French', 'Arabic'];
-    const idx = langs.indexOf(lang);
-    const newLang = langs[(idx + 1) % langs.length];
-    setLang(newLang);
-    localStorage.setItem('app_lang', newLang);
+  const handleLanguageSelect = (selectedLang) => {
+    setLang(selectedLang);
+    localStorage.setItem('app_lang', selectedLang);
     setIsMenuOpen(false);
   };
 
@@ -140,8 +139,8 @@ export default function GlobalHeader() {
                     <Moon size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
                   
-                  <button onClick={toggleLang} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <Globe size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>Language: {lang}</span>
+                  <button onClick={() => { setIsMenuOpen(false); setShowLangModal(true); }} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
+                    <Globe size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>CV Output: {lang}</span>
                   </button>
 
                   <button onClick={() => { setIsMenuOpen(false); setShowHistoryModal(true); }} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
@@ -173,6 +172,7 @@ export default function GlobalHeader() {
     </header>
     {showSettingsModal && <ProfileSettingsModal user={user} onClose={() => setShowSettingsModal(false)} />}
     {showHistoryModal && <HistoryModal onClose={() => setShowHistoryModal(false)} onRestore={handleRestoreHistory} />}
+    {showLangModal && <LanguageModal currentLang={lang} onSelect={handleLanguageSelect} onClose={() => setShowLangModal(false)} />}
     </>
   );
 }
