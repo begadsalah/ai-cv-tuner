@@ -1,20 +1,11 @@
 import Link from 'next/link';
 import { FileText, Wand2, TrendingUp } from 'lucide-react';
+import GlobalHeader from '@/components/GlobalHeader';
 
 export default function Home() {
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <header style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '8px', borderRadius: '8px', display: 'flex' }}>
-            <Wand2 size={24} color="white" />
-          </div>
-          <span className="text-gradient">CVTuner</span>
-        </div>
-        <nav>
-          <Link href="/dashboard" className="btn btn-glass">Go to App</Link>
-        </nav>
-      </header>
+      <GlobalHeader />
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <div className="glass-panel animate-fade-in" style={{ padding: '4rem', textAlign: 'center', maxWidth: '800px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

@@ -5,6 +5,7 @@ import { ArrowLeft, Play, AlertCircle } from 'lucide-react';
 import UploadCV from '@/components/UploadCV';
 import JobDescriptionInput from '@/components/JobDescriptionInput';
 import ResultsPanel from '@/components/ResultsPanel';
+import GlobalHeader from '@/components/GlobalHeader';
 
 export default function Dashboard() {
   const [cvText, setCvText] = useState('');
@@ -51,14 +52,11 @@ export default function Dashboard() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', padding: '2rem' }}>
+    <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
-      <header style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center' }}>
-        <Link href="/" className="btn btn-glass" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px' }}>
-          <ArrowLeft size={16} /> Back to Home
-        </Link>
-        <h1 style={{ marginLeft: '2rem', fontSize: '1.5rem', fontWeight: 'bold' }}>Optimizer Dashboard</h1>
-      </header>
+      <GlobalHeader />
+      
+      <div style={{ display: 'flex', flexDirection: 'column', padding: '2rem', flex: 1 }}>
       
       {error && (
         <div style={{ background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', color: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -114,6 +112,7 @@ export default function Dashboard() {
         </div>
       </div>
       
+      </div>
     </main>
   );
 }
