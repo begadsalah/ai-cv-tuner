@@ -29,11 +29,10 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      const preferredLanguage = localStorage.getItem('app_lang') || 'English';
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cvText, jobDescription, additionalContext: typeof contextOverride === 'string' && contextOverride ? contextOverride : additionalContext, language: preferredLanguage })
+        body: JSON.stringify({ cvText, jobDescription, additionalContext: typeof contextOverride === 'string' && contextOverride ? contextOverride : additionalContext })
       });
 
       if (!response.ok) {

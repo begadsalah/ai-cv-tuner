@@ -140,7 +140,7 @@ export default function GlobalHeader() {
                   </button>
                   
                   <button onClick={() => { setIsMenuOpen(false); setShowLangModal(true); }} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>
-                    <Globe size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>CV Output: {lang}</span>
+                    <Globe size={16} color="var(--text-secondary)" /> <span style={{ fontSize: '0.9rem' }}>Website Language: {lang}</span>
                   </button>
 
                   <button onClick={() => { setIsMenuOpen(false); setShowHistoryModal(true); }} style={{ width: '100%', background: 'transparent', border: 'none', padding: '10px 12px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-secondary)', cursor: 'pointer', textAlign: 'left', borderRadius: '6px' }} onMouseOver={(e) => e.currentTarget.style.background = 'var(--glass-hover)'} onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}>

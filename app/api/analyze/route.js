@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { cvText, jobDescription, additionalContext, language } = body;
+    const { cvText, jobDescription, additionalContext } = body;
 
     if (!cvText || !jobDescription) {
       return NextResponse.json({ error: 'Missing cvText or jobDescription' }, { status: 400 });
@@ -35,7 +35,7 @@ Task:
    CRITICAL PRO-LEVEL OPTIMIZATION: 
    - IDEMPOTENCY LOCK: If the provided CV already appears highly optimized, condensed, or scores >85, DO NOT penalize the format. Document structures like dense lateral arrays MUST be preserved.
    - STRICT SEMANTIC OMISSIONS: Do not create redundant labels inside generic data lists. For example, under a Languages section, just list the languages. Do not write "Languages: English".
-   - LANGUAGE ENFORCEMENT: The user has requested output strictly in: [${language || 'English'}]. You MUST generate ALL text, bullet points, and section_titles exactly natively in this language (e.g., if German, use 'Berufserfahrung' instead of 'Experience').
+   - LANGUAGE DETECTION: Detect the language of the Job Description natively (e.g. English, German). You MUST generate all text and section_titles exactly natively in that language (e.g., 'Berufserfahrung' instead of 'Experience').
    - Replace weak verbs with strong active verbs. Merge redundant bullet points logically.
    - NO HARD LINE BREAKS: Within atomic values (like email, phone, location), NEVER insert newlines (\n) or HTML breaks. Keep strings perfectly inline.
 
