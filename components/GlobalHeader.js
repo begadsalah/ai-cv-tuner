@@ -1,4 +1,5 @@
 'use client';
+import { createClient } from '@/utils/supabase/client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Wand2, Loader2, Moon, Globe, History, Settings, LogOut, User as UserIcon } from 'lucide-react';
