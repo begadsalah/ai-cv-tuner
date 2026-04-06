@@ -30,17 +30,16 @@ export async function POST(req) {
         const session = event.data.object;
         const userId = session.metadata?.user_id;
         const customerId = session.customer;
-        const subscriptionId = session.subscription;
 
         if (userId) {
-          await supabaseAdmin
+          const { error } = await supabaseAdmin
             .from('subscriptions')
             .upsert({
               user_id: userId,
               status: 'active',
               stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId,
             }, { onConflict: 'user_id' });
+          if (error) console.error('Webhook upsert error:', error.message);
         }
         break;
       }

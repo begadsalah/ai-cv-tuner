@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
+
+// Admin client bypasses RLS — safe for server-side writes
+const supabaseAdmin = createAdminClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 const FREE_TIER_LIMIT = 2;
 
@@ -12,12 +19,12 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // --- Usage Gate ---
-    const { data: subscription } = await supabase
+    // --- Usage Gate (use admin to avoid RLS read issues) ---
+    const { data: subscription } = await supabaseAdmin
       .from('subscriptions')
       .select('status, usage_count')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     const isPro = subscription?.status === 'active';
     const usageCount = subscription?.usage_count ?? 0;
@@ -114,18 +121,20 @@ Return a JSON object matching exactly this schema. Your output must ONLY be the 
     const textOutput = data.candidates[0].content.parts[0].text;
     const resultObj = JSON.parse(textOutput);
 
-    // --- Increment usage count ---
+    // --- Increment usage count (admin client bypasses RLS) ---
     if (!isPro) {
       const newCount = usageCount + 1;
       if (subscription) {
-        await supabase
+        const { error: updateErr } = await supabaseAdmin
           .from('subscriptions')
           .update({ usage_count: newCount })
           .eq('user_id', user.id);
+        if (updateErr) console.error('Failed to update usage_count:', updateErr.message);
       } else {
-        await supabase
+        const { error: insertErr } = await supabaseAdmin
           .from('subscriptions')
           .insert({ user_id: user.id, status: 'free', usage_count: newCount });
+        if (insertErr) console.error('Failed to insert subscription row:', insertErr.message);
       }
     }
 

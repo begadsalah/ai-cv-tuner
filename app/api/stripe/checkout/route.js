@@ -37,7 +37,7 @@ export async function POST(req) {
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }],
-      mode: 'subscription',
+      mode: 'payment',
       success_url: `${siteUrl}/dashboard?upgraded=true`,
       cancel_url: `${siteUrl}/dashboard?cancelled=true`,
       metadata: { user_id: user.id },
