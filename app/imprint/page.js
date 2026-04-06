@@ -11,14 +11,10 @@ export default function ImprintPage() {
       <p style={{ color: '#64748b', fontSize: '0.85rem', marginBottom: '2.5rem' }}>Information according to § 5 TMG (Germany)</p>
 
       <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '12px', padding: '2rem', marginBottom: '2rem' }}>
-        <p style={{ color: '#ef4444', fontSize: '0.82rem', marginBottom: '1.5rem', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', padding: '0.75rem 1rem', lineHeight: 1.6 }}>
-          ⚠️ <strong>Action required:</strong> Replace the placeholder fields below with your real name, address, and contact details before publishing. German law (TMG) requires accurate operator information.
-        </p>
-
         {[
-          { label: 'Operator', value: 'Begad Salah' },
-          { label: 'Address', value: '[Your Street & Number]\n[Postcode] [City]\nGermany' },
-          { label: 'Email', value: 'support@cvtuner.app' },
+          { label: 'Operator', value: 'Begad Ragab' },
+          { label: 'Address', value: 'Mitelstraße 129\n 68169 Mannheim\nGermany' },
+          { label: 'Email', value: 'begad.apple@gmail.com' },
           { label: 'VAT ID', value: 'Not applicable (small business, § 19 UStG)' },
         ].map((row) => (
           <div key={row.label} style={{ marginBottom: '1.25rem' }}>
