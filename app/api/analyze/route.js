@@ -1,7 +1,35 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/utils/supabase/server';
+
+const FREE_TIER_LIMIT = 2;
 
 export async function POST(req) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // --- Usage Gate ---
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('status, usage_count')
+      .eq('user_id', user.id)
+      .single();
+
+    const isPro = subscription?.status === 'active';
+    const usageCount = subscription?.usage_count ?? 0;
+
+    if (!isPro && usageCount >= FREE_TIER_LIMIT) {
+      return NextResponse.json(
+        { error: 'LIMIT_REACHED', message: `Free tier limit of ${FREE_TIER_LIMIT} optimizations reached. Upgrade to Pro for unlimited access.` },
+        { status: 402 }
+      );
+    }
+
+    // --- Run Analysis ---
     const body = await req.json();
     const { cvText, jobDescription, additionalContext } = body;
 
@@ -68,31 +96,43 @@ Return a JSON object matching exactly this schema. Your output must ONLY be the 
 }
 `;
 
-    // Standard Direct API Call to Gemini
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.2
-        }
+        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini Request Failed:', data);
       throw new Error(data.error?.message || 'Failed to analyze with Gemini');
     }
 
     const textOutput = data.candidates[0].content.parts[0].text;
     const resultObj = JSON.parse(textOutput);
 
-    return NextResponse.json(resultObj);
-    
+    // --- Increment usage count ---
+    if (!isPro) {
+      const newCount = usageCount + 1;
+      if (subscription) {
+        await supabase
+          .from('subscriptions')
+          .update({ usage_count: newCount })
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('subscriptions')
+          .insert({ user_id: user.id, status: 'free', usage_count: newCount });
+      }
+    }
+
+    // Attach remaining uses to response for UI
+    const remaining = isPro ? null : FREE_TIER_LIMIT - (usageCount + 1);
+    return NextResponse.json({ ...resultObj, remaining, isPro });
+
   } catch (error) {
     console.error('API Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
