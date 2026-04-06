@@ -17,17 +17,21 @@ export default function GlobalHeader() {
   const [showLangModal, setShowLangModal] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [lang, setLang] = useState('English');
+  const [isPro, setIsPro] = useState(false);
   const dropdownRef = useRef(null);
   const supabase = createClient();
   const router = useRouter();
 
-  // On mount, apply theme if previously set
+  // On mount, apply theme + check pro status
   useEffect(() => {
     const savedTheme = localStorage.getItem('app_theme') || 'dark';
     const savedLang = localStorage.getItem('app_lang') || 'English';
     setTheme(savedTheme);
     setLang(savedLang);
     document.documentElement.setAttribute('data-theme', savedTheme);
+
+    // Fetch pro status
+    fetch('/api/subscription').then(r => r.json()).then(d => setIsPro(d.isPro)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -106,19 +110,27 @@ export default function GlobalHeader() {
             {/* Clickable Profile Badge */}
             <div 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isMenuOpen ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '30px', border: `1px solid ${isMenuOpen ? 'var(--primary)' : 'var(--glass-border)'}`, cursor: 'pointer', transition: 'all 0.2s', userSelect: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isMenuOpen ? 'rgba(59, 130, 246, 0.2)' : 'rgba(0,0,0,0.3)', padding: '6px 12px', borderRadius: '30px', border: `1px solid ${isMenuOpen ? 'var(--primary)' : isPro ? 'rgba(124,58,237,0.5)' : 'var(--glass-border)'}`, cursor: 'pointer', transition: 'all 0.2s', userSelect: 'none', boxShadow: isPro ? '0 0 14px rgba(124,58,237,0.2)' : 'none' }}
             >
-               {user.user_metadata?.avatar_url ? (
-                 <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
-               ) : (
-                 <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                   <UserIcon size={16} color="white" />
-                 </div>
-               )}
+               <div style={{ position: 'relative' }}>
+                 {user.user_metadata?.avatar_url ? (
+                   <img src={user.user_metadata.avatar_url} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%', display: 'block' }} />
+                 ) : (
+                   <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                     <UserIcon size={16} color="white" />
+                   </div>
+                 )}
+                 {isPro && (
+                   <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '50%', border: '2px solid #0a0f1e', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Pro">
+                     <span style={{ fontSize: '6px', lineHeight: 1 }}>★</span>
+                   </div>
+                 )}
+               </div>
                <div style={{ display: 'flex', flexDirection: 'column' }}>
                  <span style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 600, lineHeight: 1.2 }}>
                    {user.user_metadata?.full_name?.split(' ')[0] || 'Pro User'}
                  </span>
+                 {isPro && <span style={{ color: '#a78bfa', fontSize: '0.65rem', fontWeight: 700, lineHeight: 1, letterSpacing: '0.05em' }}>PRO</span>}
                </div>
             </div>
 

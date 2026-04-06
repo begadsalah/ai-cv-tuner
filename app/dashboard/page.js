@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Play, AlertCircle, Zap, Shield } from 'lucide-react';
+import { Play, AlertCircle, Zap, Shield, Sparkles } from 'lucide-react';
 import UploadCV from '@/components/UploadCV';
 import JobDescriptionInput from '@/components/JobDescriptionInput';
 import ResultsPanel from '@/components/ResultsPanel';
@@ -19,9 +19,21 @@ export default function Dashboard() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
+  const [subLoading, setSubLoading] = useState(true);
 
-  // Handle post-checkout redirect
+  // Fetch subscription status on mount
   useEffect(() => {
+    const checkSub = async () => {
+      try {
+        const res = await fetch('/api/subscription');
+        const data = await res.json();
+        setIsPro(data.isPro);
+        setUsageCount(data.usageCount ?? 0);
+      } catch (e) { console.error(e); }
+      finally { setSubLoading(false); }
+    };
+    checkSub();
+    // Also handle post-checkout redirect
     const params = new URLSearchParams(window.location.search);
     if (params.get('upgraded') === 'true') {
       setIsPro(true);
@@ -104,48 +116,53 @@ export default function Dashboard() {
       
       <div style={{ display: 'flex', flexDirection: 'column', padding: '2rem', flex: 1 }}>
 
-        {/* Usage Badge */}
-        {!isPro && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-            <div
-              onClick={() => setShowUpgradeModal(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: remainingUses <= 0
-                  ? 'rgba(239,68,68,0.12)'
-                  : remainingUses === 1
-                  ? 'rgba(234,179,8,0.1)'
-                  : 'rgba(0,0,0,0.35)',
-                border: `1px solid ${remainingUses <= 0 ? 'rgba(239,68,68,0.5)' : remainingUses === 1 ? 'rgba(234,179,8,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                borderRadius: '20px',
-                padding: '7px 16px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: remainingUses <= 1 ? '0 0 16px rgba(234,179,8,0.15)' : 'none',
-              }}
-            >
-              <Shield size={13} color={remainingUses <= 0 ? '#ef4444' : remainingUses === 1 ? '#fbbf24' : '#64748b'} />
-              <span style={{ fontSize: '0.82rem', color: remainingUses <= 0 ? '#ef4444' : remainingUses === 1 ? '#fbbf24' : '#94a3b8', fontWeight: remainingUses <= 1 ? 600 : 400 }}>
-                {remainingUses <= 0
-                  ? '⚡ Upgrade to unlock unlimited — €10 lifetime'
-                  : remainingUses === 1
-                  ? `⚠️ Last free optimization · Unlock unlimited for €10`
-                  : `${remainingUses} free optimizations remaining`}
-              </span>
-              {remainingUses > 0 && <Zap size={11} color="#f59e0b" fill="#f59e0b" />}
-            </div>
-          </div>
-        )}
-
-        {isPro && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '20px', padding: '6px 14px' }}>
-              <Zap size={14} color="#10b981" fill="#10b981" />
-              <span style={{ fontSize: '0.82rem', color: '#10b981', fontWeight: 600 }}>Pro · Unlimited Access</span>
-            </div>
-          </div>
+        {/* Subscription Status Bar */}
+        {!subLoading && (
+          <>
+            {isPro ? (
+              /* === PRO BANNER === */
+              <div style={{ marginBottom: '1.5rem', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(37,99,235,0.15) 50%, rgba(16,185,129,0.1) 100%)', border: '1px solid rgba(124,58,237,0.3)', padding: '1rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 0 40px rgba(124,58,237,0.1)', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ width: '38px', height: '38px', background: 'linear-gradient(135deg, #7c3aed, #2563EB)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(124,58,237,0.5)', flexShrink: 0 }}>
+                    <Sparkles size={18} color="white" fill="white" />
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: 'white', fontWeight: 700, fontSize: '0.95rem' }}>Pro Access</span>
+                      <span style={{ background: 'linear-gradient(135deg, #7c3aed, #2563EB)', color: 'white', fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: '20px', letterSpacing: '0.05em' }}>LIFETIME</span>
+                    </div>
+                    <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: 0 }}>Unlimited optimizations · All features unlocked · No restrictions</p>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '1.5rem' }}>
+                  {[
+                    { label: 'Optimizations', value: '∞' },
+                    { label: 'PDF Editor', value: '✓' },
+                    { label: 'AI Compression', value: '✓' },
+                  ].map((stat) => (
+                    <div key={stat.label} style={{ textAlign: 'center' }}>
+                      <p style={{ color: '#a78bfa', fontWeight: 700, fontSize: '1rem', margin: 0 }}>{stat.value}</p>
+                      <p style={{ color: '#64748b', fontSize: '0.7rem', margin: 0 }}>{stat.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* === FREE TIER BADGE === */
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <div
+                  onClick={() => setShowUpgradeModal(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', background: remainingUses <= 0 ? 'rgba(239,68,68,0.12)' : remainingUses === 1 ? 'rgba(234,179,8,0.1)' : 'rgba(0,0,0,0.35)', border: `1px solid ${remainingUses <= 0 ? 'rgba(239,68,68,0.5)' : remainingUses === 1 ? 'rgba(234,179,8,0.4)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '20px', padding: '7px 16px', cursor: 'pointer', transition: 'all 0.2s', boxShadow: remainingUses <= 1 ? '0 0 16px rgba(234,179,8,0.15)' : 'none' }}
+                >
+                  <Shield size={13} color={remainingUses <= 0 ? '#ef4444' : remainingUses === 1 ? '#fbbf24' : '#64748b'} />
+                  <span style={{ fontSize: '0.82rem', color: remainingUses <= 0 ? '#ef4444' : remainingUses === 1 ? '#fbbf24' : '#94a3b8', fontWeight: remainingUses <= 1 ? 600 : 400 }}>
+                    {remainingUses <= 0 ? '⚡ Upgrade to unlock unlimited — €10 lifetime' : remainingUses === 1 ? '⚠️ Last free optimization · Unlock unlimited for €10' : `${remainingUses} free optimizations remaining`}
+                  </span>
+                  {remainingUses > 0 && <Zap size={11} color="#f59e0b" fill="#f59e0b" />}
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {error && (
