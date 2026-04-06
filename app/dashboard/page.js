@@ -109,13 +109,32 @@ export default function Dashboard() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
             <div
               onClick={() => setShowUpgradeModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '8px', background: remainingUses <= 0 ? 'rgba(239,68,68,0.15)' : 'rgba(0,0,0,0.3)', border: `1px solid ${remainingUses <= 0 ? '#ef4444' : 'rgba(255,255,255,0.1)'}`, borderRadius: '20px', padding: '6px 14px', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: remainingUses <= 0
+                  ? 'rgba(239,68,68,0.12)'
+                  : remainingUses === 1
+                  ? 'rgba(234,179,8,0.1)'
+                  : 'rgba(0,0,0,0.35)',
+                border: `1px solid ${remainingUses <= 0 ? 'rgba(239,68,68,0.5)' : remainingUses === 1 ? 'rgba(234,179,8,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                borderRadius: '20px',
+                padding: '7px 16px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxShadow: remainingUses <= 1 ? '0 0 16px rgba(234,179,8,0.15)' : 'none',
+              }}
             >
-              <Shield size={14} color={remainingUses <= 0 ? '#ef4444' : '#94a3b8'} />
-              <span style={{ fontSize: '0.82rem', color: remainingUses <= 0 ? '#ef4444' : '#94a3b8' }}>
-                {remainingUses <= 0 ? 'Free limit reached — Upgrade to Pro' : `${remainingUses} free optimization${remainingUses !== 1 ? 's' : ''} remaining`}
+              <Shield size={13} color={remainingUses <= 0 ? '#ef4444' : remainingUses === 1 ? '#fbbf24' : '#64748b'} />
+              <span style={{ fontSize: '0.82rem', color: remainingUses <= 0 ? '#ef4444' : remainingUses === 1 ? '#fbbf24' : '#94a3b8', fontWeight: remainingUses <= 1 ? 600 : 400 }}>
+                {remainingUses <= 0
+                  ? '⚡ Upgrade to unlock unlimited — €10 lifetime'
+                  : remainingUses === 1
+                  ? `⚠️ Last free optimization · Unlock unlimited for €10`
+                  : `${remainingUses} free optimizations remaining`}
               </span>
-              <Zap size={12} color="#f59e0b" fill="#f59e0b" />
+              {remainingUses > 0 && <Zap size={11} color="#f59e0b" fill="#f59e0b" />}
             </div>
           </div>
         )}
