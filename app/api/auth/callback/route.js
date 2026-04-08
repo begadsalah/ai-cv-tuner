@@ -12,19 +12,30 @@ export async function GET(request) {
     const supabase = createClient()
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development'
+
       if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
+        // In local dev, the origin is always correct (no proxy in between)
         return NextResponse.redirect(`${origin}${next}`)
       }
+
+      // In production, always use NEXT_PUBLIC_SITE_URL as the authoritative base.
+      // Relying on `origin` can leak the internal localhost address when behind
+      // Vercel's proxy, breaking OAuth redirects for users on other devices.
+      const siteUrl =
+        process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || // strip trailing slash
+        `https://${request.headers.get('x-forwarded-host')}` ||
+        origin
+
+      return NextResponse.redirect(`${siteUrl}${next}`)
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Invalid_Auth_Callback`)
+  // Return the user to an error page with instructions
+  const siteUrl =
+    process.env.NODE_ENV === 'development'
+      ? origin
+      : process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || origin
+
+  return NextResponse.redirect(`${siteUrl}/login?error=Invalid_Auth_Callback`)
 }
