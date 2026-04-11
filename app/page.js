@@ -48,10 +48,10 @@ export default function Home() {
             <Star size={13} fill="#818cf8" /> POWERED BY GOOGLE GEMINI AI
           </div>
 
-          <h1 style={{ fontSize: 'clamp(2.8rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.08, margin: '0 0 1.5rem', letterSpacing: '-0.02em' }}>
-            Your CV Should{' '}
-            <span style={{ background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline' }}>Open Doors,</span>
-            <br />Not Get Filtered
+          <h1 style={{ fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)', fontWeight: 900, lineHeight: 1.1, margin: '0 0 1.5rem', letterSpacing: '-0.02em' }}>
+            Your CV Should Open{' '}
+            <span style={{ background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Doors</span>
+            , Not Get Filtered
           </h1>
 
           <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '2.5rem', lineHeight: 1.7, maxWidth: '620px', marginInline: 'auto' }}>
