@@ -74,7 +74,7 @@ function MissingInfoWizard({ missingQuestions, onComplete }) {
 }
 
 
-export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, onSetAsBase }) {
+export default function ResultsPanel({ results, originalText, isLoading, onProvideMoreInfo, onSetAsBase }) {
   const [activeTab, setActiveTab] = useState('cv'); 
   const [showEditor, setShowEditor] = useState(false);
   
@@ -208,6 +208,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           {showEditor ? (
              <PDFEditor 
                initialCvData={results.optimized_cv_modular} 
+               originalText={originalText}
                onBack={() => setShowEditor(false)} 
                defaultFileName={`Optimized_CV_${new Date().toLocaleDateString()}`}
              />

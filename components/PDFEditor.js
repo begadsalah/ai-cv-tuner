@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
-import { Download, Edit3, Settings, ChevronLeft, Layout, Sparkles, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, Edit3, Settings, ChevronLeft, Layout, Sparkles, Plus, Trash2, ChevronDown, ChevronUp, SplitSquareHorizontal } from 'lucide-react';
 import OptimizedCVDocument from './OptimizedCVDocument';
 
 // Custom Hook to Debounce PDF Engine Rendering and fix flickering
@@ -16,8 +16,8 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) => {
-  const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'layout', 'ats'
+const PDFEditor = ({ initialCvData, originalText, defaultFileName = 'Optimized_CV', onBack }) => {
+  const [activeTab, setActiveTab] = useState('editor'); // 'editor', 'compare', 'layout'
   const [activeAccordion, setActiveAccordion] = useState('personal_info');
   const [cvData, setCvData] = useState(initialCvData || {});
   
@@ -152,7 +152,10 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
           
           <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
             <button onClick={() => setActiveTab('editor')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: activeTab === 'editor' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.4) 100%)' : 'transparent', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s', fontWeight: activeTab === 'editor' ? 600 : 400 }}>
-              <Edit3 size={14} /> Modular Content Editor
+              <Edit3 size={14} /> Modular Editor
+            </button>
+            <button onClick={() => setActiveTab('compare')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: activeTab === 'compare' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.4) 100%)' : 'transparent', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s', fontWeight: activeTab === 'compare' ? 600 : 400 }}>
+              <SplitSquareHorizontal size={14} /> Side-by-Side Review
             </button>
             <button onClick={() => setActiveTab('layout')} style={{ padding: '6px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer', background: activeTab === 'layout' ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.4) 100%)' : 'transparent', color: 'white', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s', fontWeight: activeTab === 'layout' ? 600 : 400 }}>
               <Layout size={14} /> Typography
@@ -167,11 +170,28 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
 
       <div style={{ display: 'flex', gap: '1rem', flex: 1, minHeight: '650px', flexWrap: 'wrap', overflowY: 'auto' }}>
         
+        {/* COMPARE MODE: Original Text Left Panel */}
+        {activeTab === 'compare' && (
+          <div className="glass-panel" style={{ flex: '1 1 350px', maxWidth: '50%', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', padding: '20px', overflowY: 'auto', background: 'rgba(15,23,42,0.6)' }}>
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: '#93c5fd', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <SplitSquareHorizontal size={18} /> Original CV Text
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Review your original unoptimized text below. If the AI altered a fact or bullet point you want to restore, simply copy it from here and paste it into the modular editor on the right.
+            </p>
+            <div style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', padding: '15px', overflowY: 'auto' }}>
+              <pre style={{ whiteSpace: 'pre-wrap', color: '#e2e8f0', fontFamily: 'inherit', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
+                {originalText || 'No original text detected.'}
+              </pre>
+            </div>
+          </div>
+        )}
+
         {/* Left Professional Settings / Editor Panel */}
-        <div className="glass-panel" style={{ flex: '1 1 350px', maxWidth: '100%', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', padding: 0 }}>
+        <div className="glass-panel" style={{ flex: '1 1 350px', maxWidth: activeTab === 'compare' ? '50%' : '100%', display: 'flex', flexDirection: 'column', height: '100%', minHeight: '500px', padding: 0 }}>
           
           {/* EDITOR TAB - MODULAR */}
-          <div style={{ display: activeTab === 'editor' ? 'flex' : 'none', flexDirection: 'column', height: '100%', overflowY: 'auto', padding: '20px' }}>
+          <div style={{ display: (activeTab === 'editor' || activeTab === 'compare') ? 'flex' : 'none', flexDirection: 'column', height: '100%', overflowY: 'auto', padding: '20px' }}>
             
             {/* Personal Info Accordion */}
             <div style={{ marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
@@ -351,12 +371,14 @@ const PDFEditor = ({ initialCvData, defaultFileName = 'Optimized_CV', onBack }) 
           </div>
         </div>
 
-        {/* Live Preview Pane */}
-        <div className="glass-panel" style={{ flex: '2 1 400px', padding: 0, overflow: 'hidden', background: '#e5e7eb', border: '2px solid rgba(255,255,255,0.1)', minHeight: '500px' }}>
-          <PDFViewer style={{ width: '100%', height: '100%', minHeight: '500px', border: 'none', transition: 'opacity 0.3s' }} showToolbar={false}>
-            <OptimizedCVDocument cvData={debouncedCvData} settings={debouncedSettings} />
-          </PDFViewer>
-        </div>
+        {/* Live Preview Pane - Hidden in compare mode */}
+        {activeTab !== 'compare' && (
+          <div className="glass-panel" style={{ flex: '2 1 400px', padding: 0, overflow: 'hidden', background: '#e5e7eb', border: '2px solid rgba(255,255,255,0.1)', minHeight: '500px' }}>
+            <PDFViewer style={{ width: '100%', height: '100%', minHeight: '500px', border: 'none', transition: 'opacity 0.3s' }} showToolbar={false}>
+              <OptimizedCVDocument cvData={debouncedCvData} settings={debouncedSettings} />
+            </PDFViewer>
+          </div>
+        )}
       </div>
     </div>
   );
