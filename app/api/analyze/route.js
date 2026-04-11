@@ -2,13 +2,75 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 
-// Admin client bypasses RLS — safe for server-side writes
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const FREE_TIER_LIMIT = 2;
+
+// Models in fallback order — most capable first, most available last
+const MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+];
+
+// Retry Gemini with exponential backoff + model fallback
+async function callGeminiWithRetry(prompt, apiKey) {
+  const maxRetries = 3;
+
+  for (const model of MODELS) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.15,
+                maxOutputTokens: 8192,
+              },
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        // Overloaded or rate-limited — retry or fall to next model
+        if (!res.ok) {
+          const errMsg = data.error?.message || '';
+          const isRetryable = res.status === 429 || res.status === 503 || errMsg.includes('overloaded');
+          console.warn(`[${model}] attempt ${attempt} failed (${res.status}): ${errMsg}`);
+
+          if (isRetryable && attempt < maxRetries) {
+            await new Promise((r) => setTimeout(r, attempt * 2000)); // 2s, 4s
+            continue;
+          }
+          break; // Move to next model
+        }
+
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error('Empty response from Gemini');
+        return text;
+
+      } catch (err) {
+        console.warn(`[${model}] attempt ${attempt} threw:`, err.message);
+        if (attempt < maxRetries) {
+          await new Promise((r) => setTimeout(r, attempt * 1500));
+        }
+      }
+    }
+  }
+
+  throw new Error(
+    'The AI service is temporarily overloaded. Please wait 30 seconds and try again.'
+  );
+}
 
 export async function POST(req) {
   try {
@@ -19,7 +81,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // --- Usage Gate (use admin to avoid RLS read issues) ---
+    // --- Usage Gate ---
     const { data: subscription } = await supabaseAdmin
       .from('subscriptions')
       .select('status, usage_count')
@@ -31,12 +93,11 @@ export async function POST(req) {
 
     if (!isPro && usageCount >= FREE_TIER_LIMIT) {
       return NextResponse.json(
-        { error: 'LIMIT_REACHED', message: `Free tier limit of ${FREE_TIER_LIMIT} optimizations reached. Upgrade to Pro for unlimited access.` },
+        { error: 'LIMIT_REACHED', message: `Free tier limit of ${FREE_TIER_LIMIT} optimizations reached.` },
         { status: 402 }
       );
     }
 
-    // --- Run Analysis ---
     const body = await req.json();
     const { cvText, jobDescription, additionalContext } = body;
 
@@ -50,78 +111,124 @@ export async function POST(req) {
     }
 
     const prompt = `
-You are an expert ATS optimizer, resume writer, and career coach.
+You are a world-class ATS optimization specialist and professional CV writer.
 
-Here is the candidate's current CV:
----
+═══════════════════════════════════════
+ORIGINAL CV (treat as sacred source of truth):
+═══════════════════════════════════════
 ${cvText}
----
 
-Here is the Job Description:
----
+═══════════════════════════════════════
+TARGET JOB DESCRIPTION:
+═══════════════════════════════════════
 ${jobDescription}
----
 
-${additionalContext ? `The user has provided this additional context to incorporate into the new optimized CV version: "${additionalContext}"\nPlease integrate this context seamlessly into the optimized CV.` : ''}
+${additionalContext ? `═══════════════════════════════════════\nADDITIONAL CONTEXT FROM CANDIDATE:\n═══════════════════════════════════════\n${additionalContext}\n` : ''}
 
-Task:
-1. Calculate the ATS match score (0-100) for the current CV against the Job Description.
-2. Rewrite and optimize the CV to perfectly match the job description. Do not fabricate experience. 
-   CRITICAL PRO-LEVEL OPTIMIZATION: 
-   - IDEMPOTENCY LOCK: If the provided CV already appears highly optimized, condensed, or scores >85, DO NOT penalize the format. Document structures like dense lateral arrays MUST be preserved.
-   - STRICT SEMANTIC OMISSIONS: Do not create redundant labels inside generic data lists. For example, under a Languages section, just list the languages. Do not write "Languages: English".
-   - LANGUAGE DETECTION: Detect the language of the Job Description natively (e.g. English, German). You MUST generate all text and section_titles exactly natively in that language (e.g., 'Berufserfahrung' instead of 'Experience').
-   - Replace weak verbs with strong active verbs. Merge redundant bullet points logically.
-   - NO HARD LINE BREAKS: Within atomic values (like email, phone, location), NEVER insert newlines (\n) or HTML breaks. Keep strings perfectly inline.
+═══════════════════════════════════════
+YOUR CORE MISSION
+═══════════════════════════════════════
+Optimize this CV to maximise ATS keyword matching for this specific job — WITHOUT fabricating, removing, or distorting any original facts.
 
-   SMART 1-PAGE ENFORCEMENT & ERGONOMICS:
-   - Perform Semantic Compression: If the CV is excessively long, you must reduce total character count by 15%. Do this by merging fragmented bullets into single high-impact action sentences. Replace long phrases with dense verbs.
-   - CATEGORICAL SKILLS: For the Skills section, enforce a strict "Category: Technology1, Technology2" format (e.g. "Tracking: GA4, GTM, Adobe Launch").
-   - ZERO DATA LOSS ON CONTACTS: NEVER delete or truncate Location (e.g., Mannheim) or Contact Details. These are hard ATS requirements.
+═══════════════════════════════════════
+ABSOLUTE PRESERVATION RULES (never violate):
+═══════════════════════════════════════
+1. ZERO DATA REMOVAL
+   - Every job title, company, date range from the original CV MUST appear in the output.
+   - Every degree, institution, graduation year MUST appear in the output.
+   - Never abbreviate or omit any role, even short-term or internship positions.
 
-3. Calculate the new projected ATS match score (0-100) after optimization.
-4. List 3 to 5 specific improvements.
-5. Write a professional Cover Letter based on the optimized CV.
-6. Identify if any critical qualifications are completely missing. Return an array of missing data questions.
+2. PRESERVE ALL QUANTITATIVE ACHIEVEMENTS
+   - Every number, percentage, metric, count, or monetary value in the original MUST appear EXACTLY as written (e.g., "reduced costs by 40%", "managed team of 12", "€2M budget"). Never paraphrase or omit them.
 
-Return a JSON object matching exactly this schema. Your output must ONLY be the JSON payload so that it can be parsed immediately.
+3. PRESERVE ALL LINKS
+   - LinkedIn URLs, GitHub URLs, portfolio links, and project URLs MUST be kept exactly as they appear. Never drop or truncate them.
+
+4. NO FABRICATION
+   - Never add a skill, tool, certification, or achievement that is not mentioned in the original CV or in the candidate's additional context.
+   - Do NOT claim the candidate is "certified in X" or "expert in Y" unless explicitly stated.
+
+5. STRENGTHEN, NEVER REPLACE
+   - Rewrite bullet points to use stronger, ATS-friendly active verbs — but keep the factual core identical.
+   - Reorder or regroup content sections to better match the job description keywords.
+
+═══════════════════════════════════════
+OPTIMIZATION RULES:
+═══════════════════════════════════════
+- LANGUAGE DETECTION: Detect the language of the Job Description. Generate ALL section titles and text natively in that language (e.g., German JD → "Berufserfahrung", not "Experience").
+- KEYWORD INJECTION: Identify the top 10 ATS keywords from the job description. Weave them naturally into bullet points, summary, and skills — only where factually supported by the original CV.
+- SKILLS SECTION FORMAT: Use strict "Category: Tool1, Tool2, Tool3" format.
+- SUMMARY: Write a 3-sentence professional summary that mirrors the job description language closely.
+- COMPRESSION: If the CV is very long, tighten bullet points by merging overlapping statements — but never delete a distinct achievement.
+- CONTACT FIELDS: Preserve name, email, phone, location, and LinkedIn exactly as found.
+- NO LINE BREAKS in single-value fields: email, phone, location must be single inline strings.
+
+═══════════════════════════════════════
+MISSING INFO (critical filtering rule):
+═══════════════════════════════════════
+Only add a question to "missing_info" if:
+- The job description explicitly requires a qualification (e.g., certification, language, tool)
+- AND that qualification is completely absent from the original CV and additional context
+- Do NOT ask about anything already present in the CV, even if phrased differently.
+- Maximum 3 questions. Return an empty array [] if nothing is truly missing.
+
+═══════════════════════════════════════
+OUTPUT SCHEMA (strict JSON only, no markdown):
+═══════════════════════════════════════
 {
   "original_score": Number,
   "optimized_score": Number,
-  "improvements": [String, ...],
-  "missing_info": [String, ...],
-  "cover_letter": "...",
+  "improvements": [String],
+  "missing_info": [String],
+  "cover_letter": "String",
   "optimized_cv_modular": {
-    "personal_info": { "name": "", "email": "", "phone": "", "location": "", "linkedin": "" },
-    "summary": { "section_title": "Professional Summary", "content": "..." },
-    "experience": { "section_title": "Experience", "items": [ { "title": "", "company": "", "date": "", "bullets": ["..."] } ] },
-    "education": { "section_title": "Education", "items": [ { "degree": "", "school": "", "date": "", "bullets": ["..."] } ] },
-    "skills": { "section_title": "Skills", "view_mode": "inline", "items": ["..."] },
-    "languages": { "section_title": "Languages", "view_mode": "inline", "items": ["..."] },
-    "custom_projects": { "section_title": "Projects", "items": [ { "title": "", "description": "", "date": "", "bullets": ["..."] } ] }
+    "personal_info": {
+      "name": "String",
+      "email": "String",
+      "phone": "String",
+      "location": "String",
+      "linkedin": "String"
+    },
+    "summary": {
+      "section_title": "String",
+      "content": "String"
+    },
+    "experience": {
+      "section_title": "String",
+      "items": [
+        { "title": "String", "company": "String", "date": "String", "bullets": ["String"] }
+      ]
+    },
+    "education": {
+      "section_title": "String",
+      "items": [
+        { "degree": "String", "school": "String", "date": "String", "bullets": ["String"] }
+      ]
+    },
+    "skills": {
+      "section_title": "String",
+      "view_mode": "inline",
+      "items": ["String"]
+    },
+    "languages": {
+      "section_title": "String",
+      "view_mode": "inline",
+      "items": ["String"]
+    },
+    "custom_projects": {
+      "section_title": "String",
+      "items": [
+        { "title": "String", "description": "String", "date": "String", "bullets": ["String"] }
+      ]
+    }
   }
 }
 `;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Failed to analyze with Gemini');
-    }
-
-    const textOutput = data.candidates[0].content.parts[0].text;
+    const textOutput = await callGeminiWithRetry(prompt, apiKey);
     const resultObj = JSON.parse(textOutput);
 
-    // --- Increment usage count (admin client bypasses RLS) ---
+    // --- Increment usage count ---
     if (!isPro) {
       const newCount = usageCount + 1;
       if (subscription) {
@@ -138,7 +245,6 @@ Return a JSON object matching exactly this schema. Your output must ONLY be the 
       }
     }
 
-    // Attach remaining uses to response for UI
     const remaining = isPro ? null : FREE_TIER_LIMIT - (usageCount + 1);
     return NextResponse.json({ ...resultObj, remaining, isPro });
 

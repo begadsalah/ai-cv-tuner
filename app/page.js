@@ -49,8 +49,9 @@ export default function Home() {
           </div>
 
           <h1 style={{ fontSize: 'clamp(2.8rem, 6vw, 4.5rem)', fontWeight: 900, lineHeight: 1.08, margin: '0 0 1.5rem', letterSpacing: '-0.02em' }}>
-            Your CV Should Open<br />
-            <span style={{ background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Doors, Not Get Filtered</span>
+            Your CV Should{' '}
+            <span style={{ background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline' }}>Open Doors,</span>
+            <br />Not Get Filtered
           </h1>
 
           <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', marginBottom: '2.5rem', lineHeight: 1.7, maxWidth: '620px', marginInline: 'auto' }}>
