@@ -193,7 +193,6 @@ export default function Dashboard() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <ResultsPanel
               results={results}
-              originalText={cvText}
               isLoading={isLoading}
               onProvideMoreInfo={(info) => { setAdditionalContext(info); handleOptimize(info); }}
               onSetAsBase={(text) => {
