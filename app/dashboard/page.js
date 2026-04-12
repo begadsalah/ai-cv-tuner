@@ -50,12 +50,17 @@ export default function Dashboard() {
     }
   }, []);
 
+  const [isReoptimization, setIsReoptimization] = useState(false);
+
   const handleOptimize = async (contextOverride = '') => {
     if (!cvText) { setError('Please upload and extract a CV first.'); return; }
     if (!jobDescription) { setError('Please provide a job description.'); return; }
 
     setIsLoading(true);
     setError(null);
+    // Track if this is a re-optimization pass (context provided)
+    const hasContext = typeof contextOverride === 'string' && contextOverride.trim().length > 0;
+    setIsReoptimization(hasContext);
 
     if (jobDescription.trim() === 'DEMO') {
       setTimeout(() => {
@@ -123,6 +128,13 @@ export default function Dashboard() {
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to process request');
+      }
+
+      // If this was a re-optimization, forcibly suppress any new wizard questions
+      // Claude may still return them despite prompt instructions — we kill them here at the code level
+      if (isReoptimization || (typeof contextOverride === 'string' && contextOverride.trim().length > 0)) {
+        data.missing_info_wizard = [];
+        data.missing_info = [];
       }
 
       setResults(data);
