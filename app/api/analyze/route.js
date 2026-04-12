@@ -176,7 +176,7 @@ Only add a question to "missing_info" if:
 CHANGE TRACING (Required):
 ═══════════════════════════════════════
 - Document your 3 to 5 most impactful text rewrites or optimizations.
-- For each, provide the EXACT `original_text` you found, and the `optimized_text` you replaced it with.
+- For each, provide the EXACT "original_text" you found, and the "optimized_text" you replaced it with.
 
 ═══════════════════════════════════════
 OUTPUT SCHEMA (strict JSON only, no markdown):

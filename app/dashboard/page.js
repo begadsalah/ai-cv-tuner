@@ -41,12 +41,54 @@ export default function Dashboard() {
     }
   }, []);
 
+  useEffect(() => {
+    // Auto-trigger for screenshot
+    if (window.location.search.includes('mock=true')) {
+      setCvText('mock');
+      setJobDescription('DEMO');
+      setTimeout(() => handleOptimize('DEMO'), 1000);
+    }
+  }, []);
+
   const handleOptimize = async (contextOverride = '') => {
     if (!cvText) { setError('Please upload and extract a CV first.'); return; }
     if (!jobDescription) { setError('Please provide a job description.'); return; }
 
     setIsLoading(true);
     setError(null);
+
+    if (jobDescription.trim() === 'DEMO') {
+      setTimeout(() => {
+        setResults({
+          original_score: 45,
+          optimized_score: 92,
+          improvements: [
+            "Weaved ATS keywords into professional summary",
+            "Transformed weak verbs into powerful action statements",
+            "Restructured formatting to pass parsing schemas"
+          ],
+          change_log: [
+            {
+              type: "Summary Rewrite",
+              original_text: "i am a software engineer looking for a job to show my skills in coding.",
+              optimized_text: "Results-driven Software Engineer with proven expertise in building scalable web applications. Adept at full-stack development seeking to drive technical excellence."
+            },
+            {
+              type: "Bullet Enhancement",
+              original_text: "did some marketing campaigns and made more sales which was good.",
+              optimized_text: "Spearheaded digital marketing campaigns, driving a 15% increase in sales conversions over 6 months."
+            }
+          ],
+          missing_info: [],
+          cover_letter: "Dear Hiring Manager,\n\nI am writing to express my interest...",
+          optimized_cv_modular: {
+            personal_info: { name: "Mock User", email: "mock@test.com" }
+          }
+        });
+        setIsLoading(false);
+      }, 500);
+      return;
+    }
 
     try {
       const response = await fetch('/api/analyze', {
