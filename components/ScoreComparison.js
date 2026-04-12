@@ -113,7 +113,18 @@ export default function ScoreComparison({ original, optimized, improvements, cha
           </div>
         </div>
       )}
-      {bridgeReport && bridgeReport.length > 0 && (
+      {bridgeReport && bridgeReport.length > 0 && isReoptimization && (
+        <div style={{ marginTop: '2.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(59,130,246,0.2) 100%)', padding: '2px', borderRadius: '16px', boxShadow: '0 0 20px rgba(16,185,129,0.15)' }}>
+          <div style={{ background: '#0f172a', padding: '2rem', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
+            <CheckCircle2 size={48} color="#10b981" style={{ filter: 'drop-shadow(0 0 10px rgba(16,185,129,0.5))' }} />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', margin: 0 }}>Gaps Successfully Bridged!</h3>
+            <p style={{ color: '#94a3b8', fontSize: '0.95rem', maxWidth: '480px', lineHeight: 1.6, margin: 0 }}>
+              Your experience has been woven directly into the CV. The AI has re-calibrated your ATS score based on the context you provided. Review your updated CV above.
+            </p>
+          </div>
+        </div>
+      )}
+      {bridgeReport && bridgeReport.length > 0 && !isReoptimization && (
         <div style={{ marginTop: '2.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(239,68,68,0.3) 100%)', padding: '2px', borderRadius: '16px', boxShadow: '0 0 20px rgba(245,158,11,0.2)' }}>
           <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '14px', height: '100%' }}>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px', textShadow: '0 0 10px rgba(245,158,11,0.5)' }}>
