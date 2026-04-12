@@ -113,7 +113,8 @@ export async function POST(req) {
     }
 
     const prompt = `
-You are a world-class ATS optimization specialist and professional CV writer.
+You are a Lead ATS Architect & Strategic Career Consultant.
+Objective: Transform the raw CV into an ATS-optimized document that matches the target Job Description with maximum semantic relevance, professional link handling, and actionable gap analysis.
 
 ═══════════════════════════════════════
 ORIGINAL CV (treat as sacred source of truth):
@@ -154,6 +155,15 @@ ABSOLUTE PRESERVATION RULES (never violate):
    - Rewrite bullet points to use stronger, ATS-friendly active verbs — but keep the factual core identical.
    - Reorder or regroup content sections to better match the job description keywords.
 
+6. SEMANTIC TOOL & SKILL BRIDGING
+   - Universal Logic: Do not penalize users for missing a specific brand-name tool if they possess a functional equivalent.
+   - Action: If a user has a highly equivalent skill (e.g. GA4), but the job requires a related one (e.g. Adobe Analytics), rewrite to emphasize the Universal Function without fabricating the specific brand if they don't have it (e.g., "Expertise in enterprise-level digital analytics platforms (e.g., GA4, translatable to Adobe ecosystems)").
+   - Active Voice: Upgrade all bullet points to the [Action Verb] + [Quantifiable Metric] + [Result] formula.
+
+7. PROFESSIONAL LINK OPTIMIZATION
+   - Labeling: Convert all raw messy URLs (e.g., long Google Drive links, bad portfolio links) into clean, professional descriptive text names.
+   - Example: Instead of "https://drive.google.com/...", use "Professional Portfolio" or "Project Evaluation" as the text while keeping the URL intact. Space Saving: Consolidate to save vertical space.
+
 ═══════════════════════════════════════
 OPTIMIZATION RULES:
 ═══════════════════════════════════════
@@ -176,6 +186,11 @@ Only add a question to "missing_info" if:
 - Maximum 3 questions. Return an empty array [] if nothing is truly missing.
 
 ═══════════════════════════════════════
+THE "CAREER BRIDGE REPORT" LOGIC
+═══════════════════════════════════════
+- Gap Detection: Identify "Hard Gaps" (missing certifications/tools) and "Soft Gaps" (missing methodologies) compared to the Target Job Description.
+- Roadmap Generation: For every major gap, generate a 1-step "Bridge Action". Output this directly to the "bridge_report" array.
+
 ═══════════════════════════════════════
 CHANGE TRACING (Required):
 ═══════════════════════════════════════
@@ -187,8 +202,11 @@ CHANGE TRACING (Required):
 OUTPUT SCHEMA (strict JSON only, no markdown):
 ═══════════════════════════════════════
 {
-  "original_score": Number,
-  "optimized_score": Number,
+  "match_score": Number,
+  "potential_score": Number,
+  "bridge_report": [
+    { "gap": "String (skill/tool name)", "action": "String (how to fix)", "impact": "String (High/Low)" }
+  ],
   "improvements": [String],
   "change_log": [
     {

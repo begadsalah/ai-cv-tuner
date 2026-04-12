@@ -50,7 +50,7 @@ export default function HistoryModal({ onClose, onRestore }) {
                        {record.timestamp ? new Date(record.timestamp).toLocaleString() : 'Recent Optimization'}
                      </p>
                      <div style={{ display: 'flex', gap: '1rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                       <span>Score Shift: <strong>{record.original_score}%</strong> <ArrowRight size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> <strong style={{ color: '#10b981' }}>{record.optimized_score}%</strong></span>
+                       <span>Score Shift: <strong>{record.match_score || record.original_score}%</strong> <ArrowRight size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> <strong style={{ color: '#10b981' }}>{record.potential_score || record.optimized_score}%</strong></span>
                      </div>
                    </div>
                    <button 

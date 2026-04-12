@@ -60,8 +60,8 @@ export default function Dashboard() {
     if (jobDescription.trim() === 'DEMO') {
       setTimeout(() => {
         setResults({
-          original_score: 45,
-          optimized_score: 92,
+          match_score: 45,
+          potential_score: 92,
           improvements: [
             "Weaved ATS keywords into professional summary",
             "Transformed weak verbs into powerful action statements",
@@ -80,6 +80,10 @@ export default function Dashboard() {
             }
           ],
           missing_info: [],
+          bridge_report: [
+            { gap: "Adobe Analytics", action: "Translate Google Analytics 4 experience mapping equivalent concepts (eVars, Props).", impact: "High" },
+            { gap: "GDPR Compliance", action: "Add explicit statement detailing data privacy governance in past projects.", impact: "High" }
+          ],
           cover_letter: "Dear Hiring Manager,\n\nI am writing to express my interest...",
           optimized_cv_modular: {
             personal_info: { name: "Mock User", email: "mock@test.com" }
@@ -133,8 +137,8 @@ export default function Dashboard() {
         currentHistory.push({
           timestamp: Date.now(),
           data,
-          original_score: data.original_score,
-          optimized_score: data.optimized_score
+          match_score: data.match_score || data.original_score,
+          potential_score: data.potential_score || data.optimized_score
         });
         if (currentHistory.length > 10) currentHistory.shift();
         localStorage.setItem('cv_history', JSON.stringify(currentHistory));

@@ -111,10 +111,11 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <ScoreComparison 
-          original={results.original_score} 
-          optimized={results.optimized_score} 
+          original={results.match_score || results.original_score} 
+          optimized={results.potential_score || results.optimized_score} 
           improvements={results.improvements} 
           changeLog={results.change_log}
+          bridgeReport={results.bridge_report}
         />
         <div style={{ marginTop: '1.5rem' }}>
           <MissingInfoWizard 
@@ -136,10 +137,11 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', overflow: 'hidden' }}>
       
       <ScoreComparison 
-        original={results.original_score} 
-        optimized={results.optimized_score} 
+        original={results.match_score || results.original_score} 
+        optimized={results.potential_score || results.optimized_score} 
         improvements={results.improvements} 
         changeLog={results.change_log}
+        bridgeReport={results.bridge_report}
       />
 
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>

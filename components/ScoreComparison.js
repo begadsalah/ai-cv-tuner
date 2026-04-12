@@ -1,7 +1,7 @@
 'use client';
 import { AlertCircle, FileText, Zap, XCircle, CheckCircle2 } from 'lucide-react';
 
-export default function ScoreComparison({ original, optimized, improvements, changeLog }) {
+export default function ScoreComparison({ original, optimized, improvements, changeLog, bridgeReport }) {
   const getScoreColor = (score) => {
     if (score >= 80) return '#10b981'; // Green
     if (score >= 60) return '#f59e0b'; // Yellow
@@ -16,7 +16,7 @@ export default function ScoreComparison({ original, optimized, improvements, cha
       
       <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Before Optimization</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Current Match Score</p>
           <div style={{ fontSize: '3rem', fontWeight: 800, color: getScoreColor(original) }}>
             {original}%
           </div>
@@ -27,7 +27,7 @@ export default function ScoreComparison({ original, optimized, improvements, cha
         </div>
         
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>After Optimization</p>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Potential Score</p>
           <div style={{ fontSize: '3rem', fontWeight: 800, color: getScoreColor(optimized) }}>
             {optimized}%
           </div>
@@ -81,6 +81,39 @@ export default function ScoreComparison({ original, optimized, improvements, cha
                         {change.optimized_text}
                       </p>
                     </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {bridgeReport && bridgeReport.length > 0 && (
+        <div style={{ marginTop: '2.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(239,68,68,0.3) 100%)', padding: '2px', borderRadius: '16px', boxShadow: '0 0 20px rgba(245,158,11,0.2)' }}>
+          <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '14px', height: '100%' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px', textShadow: '0 0 10px rgba(245,158,11,0.5)' }}>
+              <AlertCircle size={22} color="#f59e0b" /> Strategic Career Bridge Report
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              We identified critical skill gaps between your current experience and the Target Job Description. Follow these precise steps to bridge your application potential.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {bridgeReport.map((item, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '1rem', color: '#f87171', fontWeight: 700 }}>
+                      GAP: {item.gap}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: item.impact.toLowerCase() === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)', color: item.impact.toLowerCase() === 'high' ? '#fca5a5' : '#fcd34d', fontWeight: 600 }}>
+                      {item.impact.toUpperCase()} IMPACT
+                    </span>
+                  </div>
+                  <div style={{ padding: '10px', background: 'rgba(16,185,129,0.1)', borderLeft: '3px solid #10b981', borderRadius: '4px' }}>
+                    <p style={{ color: '#e2e8f0', margin: 0, fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                      <CheckCircle2 size={16} color="#34d399" style={{ marginTop: '2px', flexShrink: 0 }} />
+                      {item.action}
+                    </p>
                   </div>
                 </div>
               ))}
