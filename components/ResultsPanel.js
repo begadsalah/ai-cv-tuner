@@ -74,15 +74,17 @@ function MissingInfoWizard({ missingQuestions, onComplete }) {
 }
 
 
-export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, onSetAsBase }) {
+export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, onSetAsBase, isReoptimization }) {
   const [activeTab, setActiveTab] = useState('cv'); 
   const [showEditor, setShowEditor] = useState(false);
   
   // Manage wizard visibility explicitly
   const [wizardComplete, setWizardComplete] = useState(false);
 
-  // If there are missing questions and we haven't completed the wizard, show the wizard!
-  const hasMissingInfo = results?.missing_info && results.missing_info.length > 0;
+  // Check BOTH keys (old missing_info and new missing_info_wizard)
+  // NEVER show the wizard if this is a re-optimization run
+  const hasMissingInfo = !isReoptimization &&
+    ((results?.missing_info_wizard?.length > 0) || (results?.missing_info?.length > 0));
   
   if (isLoading) {
     return (
@@ -120,7 +122,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
         />
         <div style={{ marginTop: '1.5rem' }}>
           <MissingInfoWizard 
-            missingQuestions={results.missing_info_wizard || results.missing_info}
+          missingQuestions={results.missing_info_wizard || results.missing_info}
             onComplete={(compiledContext) => {
               setWizardComplete(true);
               if (compiledContext) {

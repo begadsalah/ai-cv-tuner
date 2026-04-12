@@ -259,6 +259,7 @@ export default function Dashboard() {
             <ResultsPanel
               results={results}
               isLoading={isLoading}
+              isReoptimization={isReoptimization}
               onProvideMoreInfo={(info) => { setAdditionalContext(info); handleOptimize(info); }}
               onSetAsBase={(text) => {
                 const tempDiv = document.createElement('div');
