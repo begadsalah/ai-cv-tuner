@@ -244,7 +244,27 @@ OUTPUT SCHEMA (strict JSON only, no markdown):
 `;
 
     const textOutput = await callGeminiWithRetry(prompt, apiKey);
-    const resultObj = JSON.parse(textOutput);
+    
+    // Helper to safely parse and strip JSON
+    const parseValidJSON = (text) => {
+      let cleaned = text.trim();
+      if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json\\n?/m, '');
+      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```\\n?/m, '');
+      if (cleaned.endsWith('```')) cleaned = cleaned.replace(/```$/m, '');
+      try {
+        return JSON.parse(cleaned.trim());
+      } catch (err) {
+        if (err.message.includes('Unterminated')) {
+           try { return JSON.parse(cleaned.trim() + '"}'); } catch(e) {}
+           try { return JSON.parse(cleaned.trim() + '"]}'); } catch(e) {}
+           try { return JSON.parse(cleaned.trim() + '}'); } catch(e) {}
+           try { return JSON.parse(cleaned.trim() + '}}'); } catch(e) {}
+        }
+        throw err;
+      }
+    };
+
+    const resultObj = parseValidJSON(textOutput);
 
     // --- Increment usage count ---
     if (!isPro) {
