@@ -21,6 +21,7 @@ async function callOpenRouter(prompt, cvText, jobDescription, apiKey) {
     },
     body: JSON.stringify({
       "model": "anthropic/claude-3.7-sonnet",
+      "max_tokens": 8192,
       "messages": [
         { "role": "system", "content": prompt },
         { "role": "user", "content": `CV: ${cvText}\n\nJD: ${jobDescription}` }
@@ -228,10 +229,12 @@ OUTPUT SCHEMA (strict JSON only, no markdown):
     
     // Helper to safely parse and strip JSON
     const parseValidJSON = (text) => {
-      let cleaned = text.trim();
-      if (cleaned.startsWith('```json')) cleaned = cleaned.replace(/^```json\\n?/m, '');
-      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```\\n?/m, '');
-      if (cleaned.endsWith('```')) cleaned = cleaned.replace(/```$/m, '');
+      let cleaned = text;
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+      }
       try {
         return JSON.parse(cleaned.trim());
       } catch (err) {
