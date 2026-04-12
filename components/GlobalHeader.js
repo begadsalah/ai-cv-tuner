@@ -91,11 +91,18 @@ export default function GlobalHeader() {
     <>
     <header style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--nav-bg)', borderBottom: '1px solid var(--glass-border)', backdropFilter: 'blur(12px)', position: 'relative', zIndex: 100 }}>
       <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div style={{ fontWeight: 'bold', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', padding: '8px', borderRadius: '8px', display: 'flex' }}>
-            <Wand2 size={24} color="white" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ background: 'linear-gradient(135deg, #3b82f6, #10b981)', padding: '6px', borderRadius: '8px', display: 'flex', boxShadow: '0 0 15px rgba(59,130,246,0.5)', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              <circle cx="12" cy="12" r="4" />
+            </svg>
           </div>
-          <span className="text-gradient">CVTuner</span>
+          <div style={{ display: 'flex', alignItems: 'center', letterSpacing: '-0.03em' }}>
+            <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'white' }}>CV</span>
+            <span style={{ fontSize: '1.6rem', fontWeight: 300, color: '#94a3b8' }}>Tuner</span>
+            <span style={{ background: 'rgba(59,130,246,0.1)', color: '#60a5fa', fontSize: '0.65rem', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', fontWeight: 700, border: '1px solid rgba(59,130,246,0.2)', transform: 'translateY(-2px)' }}>AI</span>
+          </div>
         </div>
       </Link>
       

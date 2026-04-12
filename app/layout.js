@@ -7,10 +7,10 @@ const inter = Inter({ subsets: ['latin'] });
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 export const metadata = {
-  title: 'CVTuner — AI-Powered CV Optimizer',
+  title: 'CVTuner | AI Career Intelligence',
   description: 'Upload your CV and job description. Google Gemini AI rewrites your resume to pass ATS filters, boost your match score, and generate a tailored cover letter.',
   openGraph: {
-    title: 'CVTuner — AI-Powered CV Optimizer',
+    title: 'CVTuner | AI Career Intelligence',
     description: 'Pass ATS filters and land more interviews. AI-optimized CV in under 60 seconds.',
     url: 'https://cvtuner.app',
     siteName: 'CVTuner',
