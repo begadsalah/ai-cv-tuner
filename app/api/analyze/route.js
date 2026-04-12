@@ -161,6 +161,7 @@ OPTIMIZATION RULES:
 - KEYWORD INJECTION: Identify the top 10 ATS keywords from the job description. Weave them naturally into bullet points, summary, and skills — only where factually supported by the original CV.
 - SKILLS SECTION FORMAT: Use strict "Category: Tool1, Tool2, Tool3" format.
 - SUMMARY: Write a 3-sentence professional summary that mirrors the job description language closely.
+- COVER LETTER: Generate a highly concise cover letter (max 150 words).
 - COMPRESSION: If the CV is very long, tighten bullet points by merging overlapping statements — but never delete a distinct achievement.
 - CONTACT FIELDS: Preserve name, email, phone, location, and LinkedIn exactly as found.
 - NO LINE BREAKS in single-value fields: email, phone, location must be single inline strings.
@@ -175,9 +176,11 @@ Only add a question to "missing_info" if:
 - Maximum 3 questions. Return an empty array [] if nothing is truly missing.
 
 ═══════════════════════════════════════
+═══════════════════════════════════════
 CHANGE TRACING (Required):
 ═══════════════════════════════════════
-- Document your 3 to 5 most impactful text rewrites or optimizations.
+- Document maximum 2 of your most impactful rewrites.
+- Keep the snippets very short (under 20 words each).
 - For each, provide the EXACT "original_text" you found, and the "optimized_text" you replaced it with.
 
 ═══════════════════════════════════════
