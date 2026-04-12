@@ -47,42 +47,44 @@ export default function ScoreComparison({ original, optimized, improvements, cha
       </div>
 
       {changeLog && changeLog.length > 0 && (
-        <div style={{ marginTop: '2rem' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FileText size={18} color="var(--primary)" /> Visual Changes Report
-          </h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-            Review the most impactful rewrites the AI performed below. The AI preserved your facts entirely but optimized formatting and keyword density to bypass ATS filters.
-          </p>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {changeLog.map((change, idx) => (
-              <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', overflow: 'hidden' }}>
-                <div style={{ padding: '10px 15px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  <Zap size={14} color="#f59e0b" /> {change.type}
-                </div>
-                
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', background: 'rgba(255,255,255,0.05)' }}>
-                  <div style={{ flex: '1 1 300px', padding: '1rem', background: 'rgba(239, 68, 68, 0.05)' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#ef4444', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                      <XCircle size={12} /> ORIGINAL
-                    </div>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.5, margin: 0, textDecoration: 'line-through decoration-red-500/30' }}>
-                      {change.original_text}
-                    </p>
+        <div style={{ marginTop: '2.5rem', background: 'linear-gradient(135deg, rgba(59,130,246,0.5) 0%, rgba(16,185,129,0.5) 100%)', padding: '2px', borderRadius: '16px', boxShadow: '0 0 20px rgba(59,130,246,0.2)' }}>
+          <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '14px', height: '100%' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px', textShadow: '0 0 10px rgba(59,130,246,0.5)' }}>
+              <Zap size={22} color="#60a5fa" fill="#60a5fa" /> AI Rewrite Highlights
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+              Review the most impactful rewrites the AI performed below. The AI preserved your facts entirely but strictly optimized formatting and keyword density to bypass ATS filters.
+            </p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {changeLog.map((change, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}>
+                  <div style={{ padding: '10px 15px', background: 'linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0.2))', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <FileText size={14} color="#94a3b8" /> {change.type}
                   </div>
                   
-                  <div style={{ flex: '1 1 300px', padding: '1rem', background: 'rgba(16, 185, 129, 0.05)' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                      <CheckCircle2 size={12} /> ATS OPTIMIZED
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', background: 'rgba(255,255,255,0.05)' }}>
+                    <div style={{ flex: '1 1 300px', padding: '1.25rem', background: 'rgba(239, 68, 68, 0.08)' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#f87171', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, letterSpacing: '0.05em' }}>
+                        <XCircle size={14} /> ORIGINAL TEXT
+                      </div>
+                      <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, margin: 0, textDecoration: 'line-through decoration-red-500/40' }}>
+                        {change.original_text}
+                      </p>
                     </div>
-                    <p style={{ color: 'white', fontSize: '0.9rem', lineHeight: 1.5, margin: 0 }}>
-                      {change.optimized_text}
-                    </p>
+                    
+                    <div style={{ flex: '1 1 300px', padding: '1.25rem', background: 'rgba(16, 185, 129, 0.08)' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#34d399', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, letterSpacing: '0.05em' }}>
+                        <CheckCircle2 size={14} /> ATS OPTIMIZED
+                      </div>
+                      <p style={{ color: 'white', fontSize: '0.95rem', lineHeight: 1.6, margin: 0 }}>
+                        {change.optimized_text}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}

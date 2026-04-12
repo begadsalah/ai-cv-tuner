@@ -106,15 +106,50 @@ export default function UploadCV({ onTextExtracted }) {
           const page = await pdf.getPage(i);
           const textContent = await page.getTextContent();
           
-          let lastY = -1;
           let pageText = '';
           
+          // 2D Spatial sorting to maximize multi-column efficiency
+          const rows = [];
+          
           textContent.items.forEach(item => {
-             if (lastY !== -1 && Math.abs(lastY - item.transform[5]) > 4) {
-                 pageText += '\n';
-             }
-             pageText += item.str + ' ';
-             lastY = item.transform[5];
+            const y = item.transform[5];
+            const x = item.transform[4];
+            const str = item.str.trim();
+            if (!str) return; // Skip empty space items
+            
+            // Group text items into rows with a 6-pixel vertical tolerance
+            let row = rows.find(r => Math.abs(r.y - y) <= 6);
+            if (!row) {
+              row = { y: y, textItems: [] };
+              rows.push(row);
+            }
+            // Estimate width if missing
+            const width = item.width || (str.length * 5);
+            row.textItems.push({ x, str, width });
+          });
+          
+          // Sort rows top-to-bottom (PDF Y=0 is bottom, so highest Y is top)
+          rows.sort((a, b) => b.y - a.y);
+          
+          rows.forEach(row => {
+            // Sort items within the row strictly left-to-right
+            row.textItems.sort((a, b) => a.x - b.x);
+            
+            let rowString = '';
+            for (let j = 0; j < row.textItems.length; j++) {
+               const current = row.textItems[j];
+               if (j > 0) {
+                 const prev = row.textItems[j-1];
+                 // If there's a huge horizontal gap (> 30px), treat it as a column break
+                 if (current.x - (prev.x + prev.width) > 30) {
+                   rowString += ' | ';
+                 } else {
+                   rowString += ' ';
+                 }
+               }
+               rowString += current.str;
+            }
+            pageText += rowString + '\n';
           });
           
           fullText += pageText + '\n\n';
