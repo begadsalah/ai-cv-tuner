@@ -60,8 +60,10 @@ export default function Dashboard() {
     if (jobDescription.trim() === 'DEMO') {
       setTimeout(() => {
         setResults({
-          match_score: 45,
-          potential_score: 92,
+          scores: {
+            match: 45,
+            potential: 92
+          },
           improvements: [
             "Weaved ATS keywords into professional summary",
             "Transformed weak verbs into powerful action statements",
@@ -137,8 +139,8 @@ export default function Dashboard() {
         currentHistory.push({
           timestamp: Date.now(),
           data,
-          match_score: data.match_score || data.original_score,
-          potential_score: data.potential_score || data.optimized_score
+          match_score: data.scores?.match || data.match_score || data.original_score,
+          potential_score: data.scores?.potential || data.potential_score || data.optimized_score
         });
         if (currentHistory.length > 10) currentHistory.shift();
         localStorage.setItem('cv_history', JSON.stringify(currentHistory));

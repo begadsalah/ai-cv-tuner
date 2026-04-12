@@ -9,75 +9,35 @@ const supabaseAdmin = createAdminClient(
 
 const FREE_TIER_LIMIT = 2;
 
-// Models in fallback order — most capable first, most available last
-const MODELS = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-];
+// Call OpenRouter Claude 3.5 Sonnet
+async function callOpenRouter(prompt, cvText, jobDescription, apiKey) {
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "HTTP-Referer": "https://cvtuner.app",
+      "X-Title": "AI-CV-Tuner",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      "model": "anthropic/claude-3.5-sonnet",
+      "messages": [
+        { "role": "system", "content": prompt },
+        { "role": "user", "content": `CV: ${cvText}\n\nJD: ${jobDescription}` }
+      ],
+      "response_format": { "type": "json_object" }
+    })
+  });
 
-export const maxDuration = 60; // Allow maximum Vercel timeout (60s on Hobby)
-
-// Retry Gemini with exponential backoff + model fallback
-async function callGeminiWithRetry(prompt, apiKey) {
-  const maxRetries = 2; // Reduced to prevent Vercel 504 timeouts
-
-  for (const model of MODELS) {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              safetySettings: [
-                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
-              ],
-              generationConfig: {
-                responseMimeType: 'application/json',
-                temperature: 0.15,
-                maxOutputTokens: 8192,
-              },
-            }),
-          }
-        );
-
-        const data = await res.json();
-
-        // Overloaded or rate-limited — retry or fall to next model
-        if (!res.ok) {
-          const errMsg = data.error?.message || '';
-          const isRetryable = res.status === 429 || res.status === 503 || errMsg.includes('overloaded');
-          console.warn(`[${model}] attempt ${attempt} failed (${res.status}): ${errMsg}`);
-
-          if (isRetryable && attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, attempt * 1000)); // 1s, 2s max wait
-            continue;
-          }
-          break; // Move to next model
-        }
-
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!text) throw new Error('Empty response from Gemini');
-        return text;
-
-      } catch (err) {
-        console.warn(`[${model}] attempt ${attempt} threw:`, err.message);
-        if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, attempt * 1000));
-        }
-      }
-    }
+  const data = await response.json();
+  if (!response.ok) {
+    console.error("OpenRouter Error:", data);
+    throw new Error(data.error?.message || 'Failed to fetch from OpenRouter');
   }
 
-  throw new Error(
-    'The AI service is temporarily overloaded. Please wait 30 seconds and try again.'
-  );
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('Empty response from OpenRouter');
+  return text;
 }
 
 export async function POST(req) {
@@ -113,9 +73,9 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing cvText or jobDescription' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey || apiKey === 'your_key_here') {
-      return NextResponse.json({ error: 'GEMINI_API_KEY is missing or invalid' }, { status: 500 });
+      return NextResponse.json({ error: 'OPENROUTER_API_KEY is missing or invalid' }, { status: 500 });
     }
 
     const prompt = `
@@ -123,16 +83,9 @@ You are a Lead ATS Architect & Strategic Career Consultant.
 Objective: Transform the raw CV into an ATS-optimized document that matches the target Job Description with maximum semantic relevance, professional link handling, and actionable gap analysis.
 
 ═══════════════════════════════════════
-ORIGINAL CV (treat as sacred source of truth):
+USER CONTEXT IS PROVIDED SEPARATLY AS MESSAGE CONTENT (CV AND JD).
 ═══════════════════════════════════════
-${cvText}
-
-═══════════════════════════════════════
-TARGET JOB DESCRIPTION:
-═══════════════════════════════════════
-${jobDescription}
-
-${additionalContext ? `═══════════════════════════════════════\nADDITIONAL CONTEXT FROM CANDIDATE:\n═══════════════════════════════════════\n${additionalContext}\n` : ''}
+${additionalContext ? `\nADDITIONAL CONTEXT FROM CANDIDATE:\n${additionalContext}\n` : ''}
 
 ═══════════════════════════════════════
 YOUR CORE MISSION
@@ -211,8 +164,10 @@ THE "LOGIC LENS" & WHY GENERATOR (Required):
 OUTPUT SCHEMA (strict JSON only, no markdown):
 ═══════════════════════════════════════
 {
-  "match_score": Number,
-  "potential_score": Number,
+  "scores": {
+    "match": Number,
+    "potential": Number
+  },
   "bridge_report": [
     { "gap": "String (skill/tool name)", "action": "String (how to fix)", "impact": "String (High/Low)", "ui_trigger": "String (e.g. Experience)" }
   ],
@@ -270,7 +225,7 @@ OUTPUT SCHEMA (strict JSON only, no markdown):
 }
 `;
 
-    const textOutput = await callGeminiWithRetry(prompt, apiKey);
+    const textOutput = await callOpenRouter(prompt, cvText, jobDescription, apiKey);
     
     // Helper to safely parse and strip JSON
     const parseValidJSON = (text) => {

@@ -111,8 +111,8 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <ScoreComparison 
-          original={results.match_score || results.original_score} 
-          optimized={results.potential_score || results.optimized_score} 
+          original={results.scores?.match || results.match_score || results.original_score} 
+          optimized={results.scores?.potential || results.potential_score || results.optimized_score} 
           improvements={results.improvements} 
           changeLog={results.visual_changes || results.change_log}
           bridgeReport={results.bridge_report}
@@ -137,8 +137,8 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', overflow: 'hidden' }}>
       
       <ScoreComparison 
-        original={results.match_score || results.original_score} 
-        optimized={results.potential_score || results.optimized_score} 
+        original={results.scores?.match || results.match_score || results.original_score} 
+        optimized={results.scores?.potential || results.potential_score || results.optimized_score} 
         improvements={results.improvements} 
         changeLog={results.visual_changes || results.change_log}
         bridgeReport={results.bridge_report}
