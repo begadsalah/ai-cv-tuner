@@ -4,6 +4,7 @@ import { AlertCircle, FileText, Zap, XCircle, CheckCircle2, ArrowRight } from 'l
 
 export default function ScoreComparison({ original, optimized, improvements, changeLog, bridgeReport, onProvideMoreInfo, isReoptimization }) {
   const [bridgeInputs, setBridgeInputs] = useState({});
+  const [currentBridgeStep, setCurrentBridgeStep] = useState(0);
 
   const handleBridgeInput = (idx, value) => {
     setBridgeInputs(prev => ({ ...prev, [idx]: value }));
@@ -124,68 +125,106 @@ export default function ScoreComparison({ original, optimized, improvements, cha
           </div>
         </div>
       )}
-      {bridgeReport && bridgeReport.length > 0 && !isReoptimization && (
-        <div style={{ marginTop: '2.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(239,68,68,0.3) 100%)', padding: '2px', borderRadius: '16px', boxShadow: '0 0 20px rgba(245,158,11,0.2)' }}>
-          <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '14px', height: '100%' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px', textShadow: '0 0 10px rgba(245,158,11,0.5)' }}>
-              <AlertCircle size={22} color="#f59e0b" /> Strategic Career Bridge Report
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-              We identified critical skill gaps between your current experience and the Target Job Description. Follow these precise steps to bridge your application potential.
-            </p>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {bridgeReport.map((item, idx) => (
-                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '1rem', color: '#f87171', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      GAP: {item.gap}
-                      {item.ui_trigger && (
-                        <span style={{ fontSize: '0.65rem', padding: '3px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: '#cbd5e1', fontWeight: 500 }}>
-                          EDITOR SECTION: {item.ui_trigger.toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: item.impact.toLowerCase() === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)', color: item.impact.toLowerCase() === 'high' ? '#fca5a5' : '#fcd34d', fontWeight: 600 }}>
-                      {item.impact.toUpperCase()} IMPACT
-                    </span>
-                  </div>
-                  <div style={{ padding: '10px', background: 'rgba(16,185,129,0.1)', borderLeft: '3px solid #10b981', borderRadius: '4px' }}>
-                    <p style={{ color: '#e2e8f0', margin: 0, fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
-                      <CheckCircle2 size={16} color="#34d399" style={{ marginTop: '2px', flexShrink: 0 }} />
-                      {item.action}
-                    </p>
-                  </div>
-                  
-                  {/* Only show inputs on first-pass — hide after re-optimization to stop the loop */}
-                  {onProvideMoreInfo && !isReoptimization && (
-                    <div style={{ marginTop: '10px' }}>
-                      <textarea 
-                        value={bridgeInputs[idx] || ''}
-                        onChange={(e) => handleBridgeInput(idx, e.target.value)}
-                        placeholder="How have you demonstrated this? (e.g. 'I used Adobe Analytics for 2 years at my previous job...')"
-                        style={{ width: '100%', minHeight: '60px', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.9rem', resize: 'vertical' }}
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+      {bridgeReport && bridgeReport.length > 0 && !isReoptimization && (() => {
+        const item = bridgeReport[currentBridgeStep];
+        const isLast = currentBridgeStep === bridgeReport.length - 1;
+        const progress = ((currentBridgeStep + 1) / bridgeReport.length) * 100;
+        const isHigh = item.impact?.toLowerCase() === 'high';
 
-            {onProvideMoreInfo && !isReoptimization && Object.keys(bridgeInputs).some(k => bridgeInputs[k].trim() !== '') && (
-              <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-                <button 
-                  onClick={handleSubmitBridges}
-                  className="btn btn-primary" 
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 600, cursor: 'pointer' }}
-                >
-                  Apply Bridges & Re-Optimize <ArrowRight size={18} />
-                </button>
+        return (
+          <div style={{ marginTop: '2.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.3) 0%, rgba(239,68,68,0.3) 100%)', padding: '2px', borderRadius: '16px', boxShadow: '0 0 20px rgba(245,158,11,0.2)' }}>
+            <div style={{ background: '#0f172a', padding: '1.75rem', borderRadius: '14px' }}>
+
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, textShadow: '0 0 10px rgba(245,158,11,0.5)' }}>
+                  <AlertCircle size={20} color="#f59e0b" /> ATS Gap Required
+                </h3>
+                <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                  Step {currentBridgeStep + 1} of {bridgeReport.length}
+                </span>
               </div>
-            )}
+
+              {/* Progress Bar */}
+              <div style={{ width: '100%', height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', marginBottom: '1.5rem' }}>
+                <div style={{ height: '100%', background: 'linear-gradient(90deg, #f59e0b, #ef4444)', borderRadius: '3px', width: `${progress}%`, transition: 'width 0.4s ease' }} />
+              </div>
+
+              {/* Gap Badge Row */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '1rem', color: '#f87171', fontWeight: 700 }}>GAP: {item.gap}</span>
+                {item.ui_trigger && (
+                  <span style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', color: '#cbd5e1', fontWeight: 500 }}>
+                    EDITOR SECTION: {item.ui_trigger.toUpperCase()}
+                  </span>
+                )}
+                <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: '4px', background: isHigh ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)', color: isHigh ? '#fca5a5' : '#fcd34d', fontWeight: 600 }}>
+                  {item.impact?.toUpperCase()} IMPACT
+                </span>
+              </div>
+
+              {/* Action Suggestion */}
+              <div style={{ padding: '12px 14px', background: 'rgba(16,185,129,0.08)', borderLeft: '3px solid #10b981', borderRadius: '6px', marginBottom: '1.25rem' }}>
+                <p style={{ color: '#e2e8f0', margin: 0, fontSize: '0.93rem', display: 'flex', alignItems: 'flex-start', gap: '8px', lineHeight: 1.6 }}>
+                  <CheckCircle2 size={16} color="#34d399" style={{ marginTop: '3px', flexShrink: 0 }} />
+                  {item.action}
+                </p>
+              </div>
+
+              {/* User Input */}
+              <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: '8px' }}>
+                How have you demonstrated this in your experience?
+              </p>
+              <textarea
+                value={bridgeInputs[currentBridgeStep] || ''}
+                onChange={(e) => handleBridgeInput(currentBridgeStep, e.target.value)}
+                placeholder={`e.g. "I worked with ${item.gap} for 2 years at my previous company..."`}
+                style={{ width: '100%', minHeight: '80px', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.93rem', resize: 'vertical', marginBottom: '1.25rem' }}
+              />
+
+              {/* Navigation Buttons */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={() => setCurrentBridgeStep(s => s > 0 ? s - 1 : s)}
+                  disabled={currentBridgeStep === 0}
+                  style={{ padding: '10px 18px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: currentBridgeStep === 0 ? 'not-allowed' : 'pointer', fontSize: '0.9rem' }}
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => {
+                    if (!isLast) {
+                      setCurrentBridgeStep(s => s + 1);
+                    }
+                  }}
+                  style={{ flex: 1, padding: '10px 18px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8', cursor: isLast ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: isLast ? 0.4 : 1 }}
+                  disabled={isLast}
+                >
+                  Skip →
+                </button>
+                {!isLast ? (
+                  <button
+                    onClick={() => setCurrentBridgeStep(s => s + 1)}
+                    disabled={!bridgeInputs[currentBridgeStep]?.trim()}
+                    style={{ flex: 2, padding: '10px 18px', borderRadius: '8px', background: bridgeInputs[currentBridgeStep]?.trim() ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'rgba(255,255,255,0.04)', border: 'none', color: 'white', fontWeight: 600, cursor: bridgeInputs[currentBridgeStep]?.trim() ? 'pointer' : 'not-allowed', fontSize: '0.9rem', transition: 'all 0.2s' }}
+                  >
+                    Next Gap →
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmitBridges}
+                    disabled={!Object.values(bridgeInputs).some(v => v?.trim())}
+                    style={{ flex: 2, padding: '10px 18px', borderRadius: '8px', background: Object.values(bridgeInputs).some(v => v?.trim()) ? 'linear-gradient(135deg, #10b981, #059669)' : 'rgba(255,255,255,0.04)', border: 'none', color: 'white', fontWeight: 600, cursor: Object.values(bridgeInputs).some(v => v?.trim()) ? 'pointer' : 'not-allowed', fontSize: '0.9rem', transition: 'all 0.2s' }}
+                  >
+                    ✓ Finish & Re-Optimize
+                  </button>
+                )}
+              </div>
+
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
