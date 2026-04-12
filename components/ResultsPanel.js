@@ -119,6 +119,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           changeLog={results.visual_changes || results.change_log}
           bridgeReport={results.bridge_report}
           onProvideMoreInfo={onProvideMoreInfo}
+          isReoptimization={isReoptimization}
         />
         <div style={{ marginTop: '1.5rem' }}>
           <MissingInfoWizard 
@@ -146,6 +147,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
         changeLog={results.visual_changes || results.change_log}
         bridgeReport={results.bridge_report}
         onProvideMoreInfo={onProvideMoreInfo}
+        isReoptimization={isReoptimization}
       />
 
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>

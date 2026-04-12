@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { AlertCircle, FileText, Zap, XCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function ScoreComparison({ original, optimized, improvements, changeLog, bridgeReport, onProvideMoreInfo }) {
+export default function ScoreComparison({ original, optimized, improvements, changeLog, bridgeReport, onProvideMoreInfo, isReoptimization }) {
   const [bridgeInputs, setBridgeInputs] = useState({});
 
   const handleBridgeInput = (idx, value) => {
@@ -146,7 +146,8 @@ export default function ScoreComparison({ original, optimized, improvements, cha
                     </p>
                   </div>
                   
-                  {onProvideMoreInfo && (
+                  {/* Only show inputs on first-pass — hide after re-optimization to stop the loop */}
+                  {onProvideMoreInfo && !isReoptimization && (
                     <div style={{ marginTop: '10px' }}>
                       <textarea 
                         value={bridgeInputs[idx] || ''}
@@ -160,7 +161,7 @@ export default function ScoreComparison({ original, optimized, improvements, cha
               ))}
             </div>
 
-            {onProvideMoreInfo && Object.keys(bridgeInputs).some(k => bridgeInputs[k].trim() !== '') && (
+            {onProvideMoreInfo && !isReoptimization && Object.keys(bridgeInputs).some(k => bridgeInputs[k].trim() !== '') && (
               <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
                 <button 
                   onClick={handleSubmitBridges}
