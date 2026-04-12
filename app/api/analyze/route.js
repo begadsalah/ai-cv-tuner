@@ -126,13 +126,17 @@ ABSOLUTE PRESERVATION RULES (never violate):
 ═══════════════════════════════════════
 OPTIMIZATION RULES:
 ═══════════════════════════════════════
-- LANGUAGE DETECTION: Detect the language of the Job Description. Generate ALL section titles and text natively in that language (e.g., German JD → "Berufserfahrung", not "Experience").
+- LANGUAGE ENFORCEMENT (ABSOLUTE RULE — NO EXCEPTIONS):
+  Step 1: Detect the primary language of the Job Description (JD).
+  Step 2: Produce the ENTIRE optimized_cv_modular output EXCLUSIVELY in that language. This includes ALL section titles, ALL bullet points, the professional summary, skills, education — every single string in the JSON.
+  Step 3: If the original CV was uploaded in a DIFFERENT language (e.g., German CV but English JD), you MUST fully translate AND professionally rewrite every field into the JD language. Do NOT mix languages under any circumstances. A mixed-language CV will fail ATS parsing and is strictly forbidden.
+  Step 4: Use native, professional, industry-standard vocabulary for the target language. For German output: formal terms like "Berufserfahrung", "Zusammenfassung", "Ausbildung". For English output: crisp executive-level action-verb terminology.
 - KEYWORD INJECTION: Identify the top 10 ATS keywords from the job description. Weave them naturally into bullet points, summary, and skills — only where factually supported by the original CV.
 - SKILLS SECTION FORMAT: Use strict "Category: Tool1, Tool2, Tool3" format.
-- SUMMARY: Write a 3-sentence professional summary that mirrors the job description language closely.
-- COVER LETTER: Generate a highly concise cover letter (max 150 words).
+- SUMMARY: Write a 3-sentence professional summary that mirrors the job description language closely, written in the JD language.
+- COVER LETTER: Generate a highly concise cover letter (max 150 words) written in the JD language.
 - COMPRESSION: If the CV is very long, tighten bullet points by merging overlapping statements — but never delete a distinct achievement.
-- VISUAL CENTERING & LAYOUT ENGINE: Ensure all generated text strings are formatted to fit cleanly within standard 1-inch PDF margins. Write concise strings for \`personal_info\` (no line breaks in email/phone) and \`summary\` so that they align beautifully and never mathematically float out of bounds to the top-right of the page container.
+- VISUAL CENTERING & LAYOUT ENGINE: Ensure all generated text strings are formatted to fit cleanly within standard 1-inch PDF margins. Write concise strings for personal_info (no line breaks in email/phone) so they align beautifully within the page container.
 
 ═══════════════════════════════════════
 MISSING INFO & ANTI-LOOP WIZARD LOGIC:
