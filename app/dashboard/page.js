@@ -101,7 +101,12 @@ export default function Dashboard() {
         })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error(`Server Error (${response.status}): The AI took too long to respond due to rate limits or experienced an error.`);
+      }
 
       // Paywall trigger
       if (response.status === 402 || data.error === 'LIMIT_REACHED') {

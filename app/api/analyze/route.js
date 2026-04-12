@@ -16,9 +16,11 @@ const MODELS = [
   'gemini-1.5-flash',
 ];
 
+export const maxDuration = 60; // Allow maximum Vercel timeout (60s on Hobby)
+
 // Retry Gemini with exponential backoff + model fallback
 async function callGeminiWithRetry(prompt, apiKey) {
-  const maxRetries = 3;
+  const maxRetries = 2; // Reduced to prevent Vercel 504 timeouts
 
   for (const model of MODELS) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -48,7 +50,7 @@ async function callGeminiWithRetry(prompt, apiKey) {
           console.warn(`[${model}] attempt ${attempt} failed (${res.status}): ${errMsg}`);
 
           if (isRetryable && attempt < maxRetries) {
-            await new Promise((r) => setTimeout(r, attempt * 2000)); // 2s, 4s
+            await new Promise((r) => setTimeout(r, attempt * 1000)); // 1s, 2s max wait
             continue;
           }
           break; // Move to next model
@@ -61,7 +63,7 @@ async function callGeminiWithRetry(prompt, apiKey) {
       } catch (err) {
         console.warn(`[${model}] attempt ${attempt} threw:`, err.message);
         if (attempt < maxRetries) {
-          await new Promise((r) => setTimeout(r, attempt * 1500));
+          await new Promise((r) => setTimeout(r, attempt * 1000));
         }
       }
     }
