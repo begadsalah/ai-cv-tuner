@@ -20,7 +20,7 @@ async function callOpenRouter(prompt, cvText, jobDescription, apiKey) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      "model": "anthropic/claude-3.5-sonnet",
+      "model": "anthropic/claude-3.7-sonnet",
       "messages": [
         { "role": "system", "content": prompt },
         { "role": "user", "content": `CV: ${cvText}\n\nJD: ${jobDescription}` }
