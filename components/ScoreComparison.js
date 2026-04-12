@@ -1,7 +1,26 @@
 'use client';
-import { AlertCircle, FileText, Zap, XCircle, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, FileText, Zap, XCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
-export default function ScoreComparison({ original, optimized, improvements, changeLog, bridgeReport }) {
+export default function ScoreComparison({ original, optimized, improvements, changeLog, bridgeReport, onProvideMoreInfo }) {
+  const [bridgeInputs, setBridgeInputs] = useState({});
+
+  const handleBridgeInput = (idx, value) => {
+    setBridgeInputs(prev => ({ ...prev, [idx]: value }));
+  };
+
+  const handleSubmitBridges = () => {
+    const filledBridges = Object.entries(bridgeInputs)
+      .filter(([_, val]) => val.trim() !== '')
+      .map(([idx, val]) => {
+        const item = bridgeReport[idx];
+        return `Regarding the gap "${item.gap}": ${val}`;
+      });
+      
+    if (filledBridges.length > 0 && onProvideMoreInfo) {
+      onProvideMoreInfo(filledBridges.join('\n\n'));
+    }
+  };
   const getScoreColor = (score) => {
     if (score >= 80) return '#10b981'; // Green
     if (score >= 60) return '#f59e0b'; // Yellow
@@ -126,9 +145,32 @@ export default function ScoreComparison({ original, optimized, improvements, cha
                       {item.action}
                     </p>
                   </div>
+                  
+                  {onProvideMoreInfo && (
+                    <div style={{ marginTop: '10px' }}>
+                      <textarea 
+                        value={bridgeInputs[idx] || ''}
+                        onChange={(e) => handleBridgeInput(idx, e.target.value)}
+                        placeholder="How have you demonstrated this? (e.g. 'I used Adobe Analytics for 2 years at my previous job...')"
+                        style={{ width: '100%', minHeight: '60px', padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '0.9rem', resize: 'vertical' }}
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
+
+            {onProvideMoreInfo && Object.keys(bridgeInputs).some(k => bridgeInputs[k].trim() !== '') && (
+              <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
+                <button 
+                  onClick={handleSubmitBridges}
+                  className="btn btn-primary" 
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none', borderRadius: '8px', color: 'white', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  Apply Bridges & Re-Optimize <ArrowRight size={18} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
