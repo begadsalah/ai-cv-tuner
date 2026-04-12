@@ -24,8 +24,7 @@ async function callOpenRouter(prompt, cvText, jobDescription, apiKey) {
       "messages": [
         { "role": "system", "content": prompt },
         { "role": "user", "content": `CV: ${cvText}\n\nJD: ${jobDescription}` }
-      ],
-      "response_format": { "type": "json_object" }
+      ]
     })
   });
 
