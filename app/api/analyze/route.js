@@ -32,6 +32,12 @@ async function callGeminiWithRetry(prompt, apiKey) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }] }],
+              safetySettings: [
+                { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+                { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' }
+              ],
               generationConfig: {
                 responseMimeType: 'application/json',
                 temperature: 0.15,
@@ -278,7 +284,8 @@ OUTPUT SCHEMA (strict JSON only, no markdown):
            try { return JSON.parse(cleaned.trim() + '}'); } catch(e) {}
            try { return JSON.parse(cleaned.trim() + '}}'); } catch(e) {}
         }
-        throw err;
+        console.error("Failed to parse AI output:", cleaned);
+        throw new Error("The AI overloaded and abruptly cut off the document. Try generating again, or simplify dense paragraphs in your CV.");
       }
     };
 
