@@ -132,24 +132,23 @@ OPTIMIZATION RULES:
 - SUMMARY: Write a 3-sentence professional summary that mirrors the job description language closely.
 - COVER LETTER: Generate a highly concise cover letter (max 150 words).
 - COMPRESSION: If the CV is very long, tighten bullet points by merging overlapping statements — but never delete a distinct achievement.
-- CONTACT FIELDS: Preserve name, email, phone, location, and LinkedIn exactly as found.
-- NO LINE BREAKS in single-value fields: email, phone, location must be single inline strings.
+- VISUAL CENTERING & LAYOUT ENGINE: Ensure all generated text strings are formatted to fit cleanly within standard 1-inch PDF margins. Write concise strings for \`personal_info\` (no line breaks in email/phone) and \`summary\` so that they align beautifully and never mathematically float out of bounds to the top-right of the page container.
 
 ═══════════════════════════════════════
-MISSING INFO (critical filtering rule):
+MISSING INFO & ANTI-LOOP WIZARD LOGIC:
 ═══════════════════════════════════════
-Only add a question to "missing_info" if:
-- The job description explicitly requires a qualification (e.g., certification, language, tool)
-- AND that qualification is completely absent from the original CV and additional context
-- Do NOT ask about anything already present in the CV, even if phrased differently.
-- Maximum 3 questions. Return an empty array [] if nothing is truly missing.
+- Exhaustive Extraction: Identify ALL "Hard Gaps" and "Soft Gaps" on the ONE-PASS analysis.
+- Only add a question to "missing_info_wizard" if the JD explicitly requires a qualification completely absent from the CV.
+- NO RE-PROMPTING: If "ADDITIONAL CONTEXT FROM CANDIDATE" is present in your input, you are in a **Re-Optimization Loop**. You are strictly forbidden from generating new questions. You MUST set "missing_info_wizard" to an empty array [] and integrate the user's answers securely into the document facts.
 
 ═══════════════════════════════════════
-THE "CAREER BRIDGE REPORT" LOGIC
+THE "CAREER BRIDGE REPORT" & SCORING LOGIC
 ═══════════════════════════════════════
-- Gap Detection: Identify "Hard Gaps" (missing certifications/tools) and "Soft Gaps" (missing methodologies) compared to the Target Job Description.
-- Roadmap Generation: For every major gap, generate a 1-step "Bridge Action". Output this directly to the "bridge_report" array.
-- Include a "ui_trigger" indicating which CV section (e.g., "Experience", "Summary") the user should apply the fix to.
+- SCORING STABILITY: "match_score" represents the current alignment. "potential_score" is what is achievable. 
+- PROGRESSIVE VALIDATION: If the user provided "ADDITIONAL CONTEXT", you must treat their previous score as the new baseline. The new "match_score" MUST rise because a factual gap was bridged.
+- "potential_score" should only remain higher than "match_score" if there are still unanswered bridge actions.
+- Gap Detection: Identify missing tools/methodologies and generate a 1-step "Bridge Action" mapped to "bridge_report".
+- Include a "ui_trigger" indicating which CV section the user should apply the fix to.
 
 ═══════════════════════════════════════
 ═══════════════════════════════════════
