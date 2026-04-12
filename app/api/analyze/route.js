@@ -196,13 +196,16 @@ THE "CAREER BRIDGE REPORT" LOGIC
 ═══════════════════════════════════════
 - Gap Detection: Identify "Hard Gaps" (missing certifications/tools) and "Soft Gaps" (missing methodologies) compared to the Target Job Description.
 - Roadmap Generation: For every major gap, generate a 1-step "Bridge Action". Output this directly to the "bridge_report" array.
+- Include a "ui_trigger" indicating which CV section (e.g., "Experience", "Summary") the user should apply the fix to.
 
 ═══════════════════════════════════════
-CHANGE TRACING (Required):
 ═══════════════════════════════════════
-- Document maximum 2 of your most impactful rewrites.
+THE "LOGIC LENS" & WHY GENERATOR (Required):
+═══════════════════════════════════════
+- Document maximum 2 of your most impactful rewrites in the "visual_changes" array.
 - Keep the snippets very short (under 20 words each).
-- For each, provide the EXACT "original_text" you found, and the "optimized_text" you replaced it with.
+- For each, provide the EXACT "original" text you found, the "optimized" text you replaced it with.
+- "strategy_insight": Explain the "Why" behind the change (e.g. "Bridging GA4 to Adobe Launch functionality to pass technical filters").
 
 ═══════════════════════════════════════
 OUTPUT SCHEMA (strict JSON only, no markdown):
@@ -211,17 +214,17 @@ OUTPUT SCHEMA (strict JSON only, no markdown):
   "match_score": Number,
   "potential_score": Number,
   "bridge_report": [
-    { "gap": "String (skill/tool name)", "action": "String (how to fix)", "impact": "String (High/Low)" }
+    { "gap": "String (skill/tool name)", "action": "String (how to fix)", "impact": "String (High/Low)", "ui_trigger": "String (e.g. Experience)" }
   ],
   "improvements": [String],
-  "change_log": [
+  "visual_changes": [
     {
-      "type": "String (e.g., 'Summary Rewrite', 'Bullet Enhancement')",
-      "original_text": "String",
-      "optimized_text": "String"
+      "original": "String",
+      "optimized": "String",
+      "strategy_insight": "String"
     }
   ],
-  "missing_info": [String],
+  "missing_info_wizard": [String],
   "cover_letter": "String",
   "optimized_cv_modular": {
     "personal_info": {

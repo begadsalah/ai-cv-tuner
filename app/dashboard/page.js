@@ -67,22 +67,22 @@ export default function Dashboard() {
             "Transformed weak verbs into powerful action statements",
             "Restructured formatting to pass parsing schemas"
           ],
-          change_log: [
+          visual_changes: [
             {
-              type: "Summary Rewrite",
-              original_text: "i am a software engineer looking for a job to show my skills in coding.",
-              optimized_text: "Results-driven Software Engineer with proven expertise in building scalable web applications. Adept at full-stack development seeking to drive technical excellence."
+              original: "i am a software engineer looking for a job to show my skills in coding.",
+              optimized: "Results-driven Software Engineer with proven expertise in building scalable web applications. Adept at full-stack development seeking to drive technical excellence.",
+              strategy_insight: "Replaced generic objective with an Executive Summary that maps core competencies directly to the ATS required fields."
             },
             {
-              type: "Bullet Enhancement",
-              original_text: "did some marketing campaigns and made more sales which was good.",
-              optimized_text: "Spearheaded digital marketing campaigns, driving a 15% increase in sales conversions over 6 months."
+              original: "did some marketing campaigns and made more sales which was good.",
+              optimized: "Spearheaded digital marketing campaigns, driving a 15% increase in sales conversions over 6 months.",
+              strategy_insight: "Applied active voice and quantified impact metrics to pass the automated 'Impact Assessment' filters."
             }
           ],
-          missing_info: [],
+          missing_info_wizard: [],
           bridge_report: [
-            { gap: "Adobe Analytics", action: "Translate Google Analytics 4 experience mapping equivalent concepts (eVars, Props).", impact: "High" },
-            { gap: "GDPR Compliance", action: "Add explicit statement detailing data privacy governance in past projects.", impact: "High" }
+            { gap: "Adobe Analytics", action: "Translate Google Analytics 4 experience mapping equivalent concepts (eVars, Props).", impact: "High", ui_trigger: "Experience" },
+            { gap: "GDPR Compliance", action: "Add explicit statement detailing data privacy governance in past projects.", impact: "High", ui_trigger: "Summary" }
           ],
           cover_letter: "Dear Hiring Manager,\n\nI am writing to express my interest...",
           optimized_cv_modular: {

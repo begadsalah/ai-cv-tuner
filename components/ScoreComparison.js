@@ -60,7 +60,7 @@ export default function ScoreComparison({ original, optimized, improvements, cha
               {changeLog.map((change, idx) => (
                 <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}>
                   <div style={{ padding: '10px 15px', background: 'linear-gradient(to right, rgba(0,0,0,0.5), rgba(0,0,0,0.2))', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <FileText size={14} color="#94a3b8" /> {change.type}
+                    <FileText size={14} color="#94a3b8" /> REWRITE LOGIC
                   </div>
                   
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1px', background: 'rgba(255,255,255,0.05)' }}>
@@ -69,7 +69,7 @@ export default function ScoreComparison({ original, optimized, improvements, cha
                         <XCircle size={14} /> ORIGINAL TEXT
                       </div>
                       <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', lineHeight: 1.6, margin: 0, textDecoration: 'line-through decoration-red-500/40' }}>
-                        {change.original_text}
+                        {change.original_text || change.original}
                       </p>
                     </div>
                     
@@ -78,9 +78,16 @@ export default function ScoreComparison({ original, optimized, improvements, cha
                         <CheckCircle2 size={14} /> ATS OPTIMIZED
                       </div>
                       <p style={{ color: 'white', fontSize: '0.95rem', lineHeight: 1.6, margin: 0 }}>
-                        {change.optimized_text}
+                        {change.optimized_text || change.optimized}
                       </p>
                     </div>
+                  </div>
+                  {change.strategy_insight && (
+                    <div style={{ padding: '12px 15px', background: 'rgba(59, 130, 246, 0.1)', borderTop: '1px solid rgba(59, 130, 246, 0.2)', fontSize: '0.85rem', color: '#93c5fd', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                      <AlertCircle size={16} color="#60a5fa" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <span><strong>STRATEGY INSIGHT:</strong> {change.strategy_insight}</span>
+                    </div>
+                  )}
                   </div>
                 </div>
               ))}
@@ -102,8 +109,13 @@ export default function ScoreComparison({ original, optimized, improvements, cha
               {bridgeReport.map((item, idx) => (
                 <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ fontSize: '1rem', color: '#f87171', fontWeight: 700 }}>
+                    <div style={{ fontSize: '1rem', color: '#f87171', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                       GAP: {item.gap}
+                      {item.ui_trigger && (
+                        <span style={{ fontSize: '0.65rem', padding: '3px 6px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: '#cbd5e1', fontWeight: 500 }}>
+                          EDITOR SECTION: {item.ui_trigger.toUpperCase()}
+                        </span>
+                      )}
                     </div>
                     <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', background: item.impact.toLowerCase() === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)', color: item.impact.toLowerCase() === 'high' ? '#fca5a5' : '#fcd34d', fontWeight: 600 }}>
                       {item.impact.toUpperCase()} IMPACT

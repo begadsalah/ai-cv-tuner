@@ -114,12 +114,12 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           original={results.match_score || results.original_score} 
           optimized={results.potential_score || results.optimized_score} 
           improvements={results.improvements} 
-          changeLog={results.change_log}
+          changeLog={results.visual_changes || results.change_log}
           bridgeReport={results.bridge_report}
         />
         <div style={{ marginTop: '1.5rem' }}>
           <MissingInfoWizard 
-            missingQuestions={results.missing_info}
+            missingQuestions={results.missing_info_wizard || results.missing_info}
             onComplete={(compiledContext) => {
               setWizardComplete(true);
               if (compiledContext) {
@@ -140,7 +140,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
         original={results.match_score || results.original_score} 
         optimized={results.potential_score || results.optimized_score} 
         improvements={results.improvements} 
-        changeLog={results.change_log}
+        changeLog={results.visual_changes || results.change_log}
         bridgeReport={results.bridge_report}
       />
 
