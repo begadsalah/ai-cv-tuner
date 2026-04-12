@@ -114,6 +114,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
           original={results.original_score} 
           optimized={results.optimized_score} 
           improvements={results.improvements} 
+          changeLog={results.change_log}
         />
         <div style={{ marginTop: '1.5rem' }}>
           <MissingInfoWizard 
@@ -138,6 +139,7 @@ export default function ResultsPanel({ results, isLoading, onProvideMoreInfo, on
         original={results.original_score} 
         optimized={results.optimized_score} 
         improvements={results.improvements} 
+        changeLog={results.change_log}
       />
 
       <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>

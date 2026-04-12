@@ -173,12 +173,25 @@ Only add a question to "missing_info" if:
 - Maximum 3 questions. Return an empty array [] if nothing is truly missing.
 
 ═══════════════════════════════════════
+CHANGE TRACING (Required):
+═══════════════════════════════════════
+- Document your 3 to 5 most impactful text rewrites or optimizations.
+- For each, provide the EXACT `original_text` you found, and the `optimized_text` you replaced it with.
+
+═══════════════════════════════════════
 OUTPUT SCHEMA (strict JSON only, no markdown):
 ═══════════════════════════════════════
 {
   "original_score": Number,
   "optimized_score": Number,
   "improvements": [String],
+  "change_log": [
+    {
+      "type": "String (e.g., 'Summary Rewrite', 'Bullet Enhancement')",
+      "original_text": "String",
+      "optimized_text": "String"
+    }
+  ],
   "missing_info": [String],
   "cover_letter": "String",
   "optimized_cv_modular": {
