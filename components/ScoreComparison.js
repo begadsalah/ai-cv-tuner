@@ -88,7 +88,6 @@ export default function ScoreComparison({ original, optimized, improvements, cha
                       <span><strong>STRATEGY INSIGHT:</strong> {change.strategy_insight}</span>
                     </div>
                   )}
-                  </div>
                 </div>
               ))}
             </div>
