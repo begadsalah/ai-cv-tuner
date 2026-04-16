@@ -10,25 +10,35 @@ export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  // HARD CACHE OVERRIDE
+  // Listen for auth state — fires immediately when OAuth callback completes
   useEffect(() => {
-    // Kill BFCache Ghost Screen
-    window.onpageshow = function(event) {
-      if (event.persisted) {
-        window.location.reload();
-      }
-    };
-
-    const enforceAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+    // Redirect if already logged in on mount
+    supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         router.replace('/dashboard');
       } else {
         setInitChecking(false);
       }
+    });
+
+    // Also listen for the OAuth callback completing (catches single-click flow)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        router.replace('/dashboard');
+      }
+    });
+
+    // BFCache ghost screen fix
+    const handlePageShow = (event) => {
+      if (event.persisted) window.location.reload();
     };
-    enforceAuth();
-  }, [supabase, router]);
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
 
   const handleGoogleLogin = async () => {
     setIsAuthenticating(true);

@@ -9,13 +9,12 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Missing cvData block' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey || apiKey === 'your_key_here') {
-      return NextResponse.json({ error: 'GEMINI_API_KEY is missing or invalid' }, { status: 500 });
+      return NextResponse.json({ error: 'OPENROUTER_API_KEY is missing or invalid' }, { status: 500 });
     }
 
-    const prompt = `
-You are an expert ATS optimization engine. The user needs to shrink their CV to fit perfectly onto exactly 1 A4 page, but they cannot afford to lose ANY crucial ATS search keywords or structural identity.
+    const prompt = `You are an expert ATS optimization engine. The user needs to shrink their CV to fit perfectly onto exactly 1 A4 page, but they cannot afford to lose ANY crucial ATS search keywords or structural identity.
 
 Here is the current CV structurally defined in JSON:
 ---
@@ -29,34 +28,43 @@ Constraint Protocol for "Semantic Compression":
 1. Merge fragmented bullets into single, highly-dense action sentences. Replace long phrases with short, powerful action verbs.
 2. Cut "fluff" but NEVER remove hard technical ATS keywords, Job Titles, Companies, numeric metrics, or dates.
 3. For the Skills section, enforce a strict "Category: Technology1, Technology2" format (e.g. "Tracking: GA4, GTM").
-4. ZERO DATA LOSS ON CONTACTS: NEVER delete or truncate Location (e.g., Mannheim) or Contact Details (emails, phones). These are hard requirements.
+4. ZERO DATA LOSS ON CONTACTS: NEVER delete or truncate Location, emails, or phones.
 
-Output ONLY the raw JSON object mimicking the input schema. DO NOT wrap your response in markdown code blocks like \`\`\`json. Output pure JSON format explicitly.
-`;
+Output ONLY the raw JSON object mimicking the input schema. No markdown, no code blocks. Pure JSON only.`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://cvtuner.app',
+        'X-Title': 'AI-CV-Tuner',
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json'
-        }
+        model: 'anthropic/claude-3.7-sonnet',
+        max_tokens: 4096,
+        messages: [
+          { role: 'user', content: prompt }
+        ]
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini Request Failed:', data);
-      throw new Error(data.error?.message || 'Failed to compress with Gemini');
+      console.error('OpenRouter Request Failed:', data);
+      throw new Error(data.error?.message || 'Failed to compress with OpenRouter');
     }
 
-    let textOutput = data.candidates[0].content.parts[0].text;
+    let textOutput = data.choices?.[0]?.message?.content;
+    if (!textOutput) throw new Error('Empty response from OpenRouter');
     
-    // Clean up markdown
-    textOutput = textOutput.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+    // Robust JSON extraction: find first { and last }
+    const firstBrace = textOutput.indexOf('{');
+    const lastBrace = textOutput.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      textOutput = textOutput.substring(firstBrace, lastBrace + 1);
+    }
 
     const compressedJson = JSON.parse(textOutput);
 
